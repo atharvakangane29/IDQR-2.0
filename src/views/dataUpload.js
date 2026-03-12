@@ -10,14 +10,12 @@ const DataUpload = (() => {
     { field: 'account_name', label: 'Account Name', type: 'string',  example: 'NorthStar Pharma' },
     { field: 'region',       label: 'Region',       type: 'string',  example: 'Boston, MA' },
     { field: 'account_type', label: 'Account Type', type: 'string',  example: 'Specialty Pharmacy' },
-    { field: 'score',        label: 'Anomaly Score',type: 'decimal', example: '18.45' },
     { field: 'week_index',   label: 'Week Index',   type: 'integer', example: '22' },
-    { field: 'reason',       label: 'Reason',       type: 'string',  example: 'Volume Spike' },
   ];
 
   // Simulated auto-mapping: in real backend, this parses actual CSV headers
   const MOCK_USER_COLUMNS = [
-    'acct_id', 'acct_name', 'territory', 'acct_type', 'anomaly_score', 'wk_idx', 'flag_reason'
+    'acct_id', 'acct_name', 'territory', 'acct_type', 'wk_idx'
   ];
 
   function init() {

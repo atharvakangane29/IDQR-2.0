@@ -2,8 +2,9 @@
    IDQR 2.0 — Screen 3: Data KPIs
    src/views/dataKPIs.js
 
-   Pulls stats directly from mockData.json.
-   No ML yet — pure descriptive analytics.
+   Shows ONLY what exists in the raw uploaded
+   data — before the ML model runs.
+   No score, anomaly type, or reason columns.
 ═══════════════════════════════════════════ */
 
 const DataKPIs = (() => {
@@ -18,52 +19,54 @@ const DataKPIs = (() => {
     const json = await res.json();
     const data = json.records;
 
-    renderKPICards(data, json);
+    renderKPICards(data);
     renderAccountTypeBar(data);
-    renderScoreDistribution(data);
+    renderWeeklySpread(data);
   }
 
-  function renderKPICards(data, json) {
-    // ─ Total Accounts
-    const totalAccounts = data.length;
-    set('kpiTotalAccounts', totalAccounts);
-    set('kpiTotalAccountsSub', `Unique account IDs in dataset`);
+  function renderKPICards(data) {
+    // Total Accounts
+    set('kpiTotalAccounts',    data.length);
+    set('kpiTotalAccountsSub', 'Unique account IDs in dataset');
 
-    // ─ Total Net Sales Units (same formula as dashboard)
+    // Total Net Sales Units (derived from account ID — no score involved)
     const totalVol = data.reduce((s, r) => s + ((r.id * 17 + 200) % 900) + 300, 0);
-    set('kpiTotalVol', totalVol.toLocaleString());
-    set('kpiTotalVolSub', `~$${(totalVol * 0.096).toFixed(0)}K estimated exposure`);
+    set('kpiTotalVol',    totalVol.toLocaleString());
+    set('kpiTotalVolSub', '~$' + (totalVol * 0.096).toFixed(0) + 'K estimated exposure');
 
-    // ─ Avg Anomaly Score
-    const avg = data.reduce((s, r) => s + r.score, 0) / data.length;
-    set('kpiAvgScore', avg.toFixed(2));
-    set('kpiAvgScoreSub', `Across all ${data.length} records`);
-
-    // ─ Records Above Threshold (score >= 15)
-    const aboveThresh = data.filter(r => r.score >= 15).length;
-    set('kpiAboveThresh', aboveThresh);
-    set('kpiAboveThreshSub', `Score ≥ 15  (${((aboveThresh / data.length) * 100).toFixed(0)}% of records)`);
-
-    // ─ Regions Covered
+    // Unique Regions
     const regions = new Set(data.map(r => r.region)).size;
-    set('kpiRegions', regions);
-    set('kpiRegionsSub', `Unique cities / territories`);
+    set('kpiRegions',    regions);
+    set('kpiRegionsSub', 'Unique cities / territories');
 
-    // ─ Date Range
-    const start = 'Jul 2024';
-    const end   = 'Feb 2026';
-    set('kpiDateRange', '78 wks');
-    set('kpiDateRangeSub', `${start} → ${end}`);
+    // Unique Account Types
+    const types = new Set(data.map(r => r.type)).size;
+    set('kpiAcctTypes',    types);
+    set('kpiAcctTypesSub', 'Distinct account categories');
+
+    // Date Range — derived from week_index
+    const minWk = Math.min(...data.map(r => r.weekIdx));
+    const maxWk = Math.max(...data.map(r => r.weekIdx));
+    const start = new Date('2024-07-07');
+    const toDate = function(wk) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + wk * 7);
+      return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+    set('kpiDateRange',    (maxWk - minWk) + ' wks');
+    set('kpiDateRangeSub', toDate(minWk) + ' to ' + toDate(maxWk));
+
+    // Records per week avg
+    const avgPerWk = (data.length / (maxWk - minWk || 1)).toFixed(1);
+    set('kpiWeeklyAvg',    avgPerWk);
+    set('kpiWeeklyAvgSub', 'Avg records per week');
   }
 
   function renderAccountTypeBar(data) {
-    // Count records per type
-    const typeCounts = {};
-    data.forEach(r => {
-      typeCounts[r.type] = (typeCounts[r.type] || 0) + 1;
-    });
-    const sorted = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
-    const max    = sorted[0][1];
+    const counts = {};
+    data.forEach(function(r) { counts[r.type] = (counts[r.type] || 0) + 1; });
+    const sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; });
+    const max = sorted[0][1];
 
     const COLORS = {
       'Attribute Error':    '#A35139',
@@ -76,35 +79,42 @@ const DataKPIs = (() => {
 
     const container = document.getElementById('acctTypeBars');
     if (!container) return;
-    container.innerHTML = sorted.map(([type, count]) => `
-      <div class="acct-bar-row">
-        <span class="acct-bar-label" title="${type}">${type}</span>
-        <div class="acct-bar-track">
-          <div class="acct-bar-fill" style="width:${(count / max * 100).toFixed(1)}%;background:${COLORS[type] || '#7FA3C0'}"></div>
-        </div>
-        <span class="acct-bar-count">${count}</span>
-      </div>`).join('');
+    container.innerHTML = sorted.map(function(entry) {
+      const type = entry[0], count = entry[1];
+      return '<div class="acct-bar-row">' +
+        '<span class="acct-bar-label" title="' + type + '">' + type + '</span>' +
+        '<div class="acct-bar-track"><div class="acct-bar-fill" style="width:' +
+        (count / max * 100).toFixed(1) + '%;background:' + (COLORS[type] || '#7FA3C0') + '"></div></div>' +
+        '<span class="acct-bar-count">' + count + '</span>' +
+        '</div>';
+    }).join('');
   }
 
-  function renderScoreDistribution(data) {
-    const low  = data.filter(r => r.score < 12).length;
-    const med  = data.filter(r => r.score >= 12 && r.score < 20).length;
-    const high = data.filter(r => r.score >= 20).length;
-    const n    = data.length;
+  function renderWeeklySpread(data) {
+    const weeks  = data.map(function(r) { return r.weekIdx; });
+    const minWk  = Math.min.apply(null, weeks);
+    const maxWk  = Math.max.apply(null, weeks);
+    const third  = (maxWk - minWk) / 3;
+    const early  = data.filter(function(r) { return r.weekIdx <= minWk + third; }).length;
+    const mid    = data.filter(function(r) { return r.weekIdx > minWk + third && r.weekIdx <= minWk + 2 * third; }).length;
+    const recent = data.filter(function(r) { return r.weekIdx > minWk + 2 * third; }).length;
+    const n      = data.length;
 
-    const container = document.getElementById('scoreDistZones');
+    const container = document.getElementById('weeklySpreadZones');
     if (!container) return;
-    container.innerHTML = [
-      { label: 'Low  (0 – 11)',    count: low,  color: '#7FA3C0' },
-      { label: 'Medium  (12 – 19)',count: med,  color: '#FFB162' },
-      { label: 'Critical  (20+)',  count: high, color: '#A35139' },
-    ].map(z => `
-      <div class="score-zone-row">
-        <span class="score-zone-dot" style="background:${z.color}"></span>
-        <span class="score-zone-label">${z.label}</span>
-        <span class="score-zone-count">${z.count}</span>
-        <span class="score-zone-pct">${((z.count / n) * 100).toFixed(0)}%</span>
-      </div>`).join('');
+    const zones = [
+      { label: 'Early period',  count: early,  color: '#7FA3C0' },
+      { label: 'Mid period',    count: mid,    color: '#FFB162' },
+      { label: 'Recent period', count: recent, color: '#A35139' },
+    ];
+    container.innerHTML = zones.map(function(z) {
+      return '<div class="score-zone-row">' +
+        '<span class="score-zone-dot" style="background:' + z.color + '"></span>' +
+        '<span class="score-zone-label">' + z.label + '</span>' +
+        '<span class="score-zone-count">' + z.count + '</span>' +
+        '<span class="score-zone-pct">' + ((z.count / n) * 100).toFixed(0) + '%</span>' +
+        '</div>';
+    }).join('');
   }
 
   function set(id, val) {
@@ -112,5 +122,5 @@ const DataKPIs = (() => {
     if (el) el.textContent = val;
   }
 
-  return { init };
+  return { init: init };
 })();

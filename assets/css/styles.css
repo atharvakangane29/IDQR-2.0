@@ -41,7 +41,7 @@ header {
 }
 .logo { display: flex; align-items: center; gap: 9px; }
 .logo-title {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.3rem;
   color: #fff;
 }
@@ -225,7 +225,7 @@ header {
   margin-bottom: 5px;
 }
 .kpi-val {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 2.5rem;
   line-height: 1.05;
   color: var(--truffle);
@@ -279,7 +279,7 @@ header {
   pointer-events: none;
 }
 .gauge-big {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.6rem;
   line-height: 1;
 }
