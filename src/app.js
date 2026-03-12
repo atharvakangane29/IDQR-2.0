@@ -31,17 +31,7 @@ const TIME_LABELS = [], BASELINE = [], REGIONAL_BASE = [];
 })();
 
 function buildRegionalWithAnomalies(activeData) {
-  const series = [...REGIONAL_BASE];
-  activeData.forEach(r => {
-    const wi = r.weekIdx;
-    if (wi >= 0 && wi < WEEKS) {
-      const spike = Math.max(series[wi] * 1.5, series[wi] + r.score * 6);
-      series[wi] = +spike.toFixed(1);
-      if (wi > 0)        series[wi - 1] = +Math.max(series[wi - 1], series[wi] * 0.6).toFixed(1);
-      if (wi < WEEKS - 1) series[wi + 1] = +Math.max(series[wi + 1], series[wi] * 0.55).toFixed(1);
-    }
-  });
-  return series;
+  return ALL_DATA._precomputedForecast || [...REGIONAL_BASE];
 }
 
 /* ═══════════════════════════════════════════
@@ -52,7 +42,7 @@ let TYPE_BADGE   = {};
 let REGION_CITIES = {};
 let ACCT_IDS     = {};
 
-let filters  = { date: "All Time", region: "All Regions", acct: "All Types", sevLo: 0, sevHi: 30 };
+let filters  = { date: "All Time", state: "All States", acct: "All Types", sevLo: 0, sevHi: 30 };
 let currentData = [];
 let cfIds    = new Set();
 let cfSource = "";
@@ -167,7 +157,7 @@ function renderTable(data) {
     return `<tr data-id="${r.id}"
       class="${r.score >= 20 ? "critical" : ""} ${sel ? "cf-sel" : ""} ${dim ? "cf-dim" : ""}"
       onclick="tableRowClick(${r.id})">
-      <td>${r.id}</td>
+      <td>${String(r.id).padStart(8, '0')}</td>
       <td>${r.name}</td>
       <td>${r.region}</td>
       <td><span class="badge ${TYPE_BADGE[r.type] || "badge-disc"}">${r.type}</span></td>
@@ -463,46 +453,35 @@ function rebuildLine(data, highlightIds) {
    TIER BAR CHART
 ═══════════════════════════════════════════ */
 function buildTier(data) {
-  const c = { p: 0, v: 0, a: 0, f: 0 };
+  const counts = {};
   data.forEach(r => {
-    if (r.type === "Pricing Issue")       c.p++;
-    else if (r.type === "Volume Spike")   c.v++;
-    else if (r.type === "Attribute Error") c.a++;
-    else                                   c.f++;
+    counts[r.type] = (counts[r.type] || 0) + 1;
   });
 
-  function spread(n, seed) {
-    const r = seededRng(seed + n * 7);
-    n = Math.max(n, 1);
-    const a  = Math.max(0, Math.round(n * .28 + r() * .8));
-    const b  = Math.max(0, Math.round(n * .33 + r() * .8));
-    const cc = Math.max(0, Math.round(n * .22 + r() * .5));
-    return [a, b, cc, Math.max(0, n - a - b - cc)];
-  }
+  const labels = Object.keys(counts);
+  const chartData = Object.values(counts);
 
   const canvas = document.getElementById("tierChart");
   if (tierInst) { tierInst.destroy(); tierInst = null; }
   tierInst = new Chart(canvas, {
     type: "bar",
-    data: { labels: ["East", "Central", "West", "South"], datasets: [
-      { label: "Pricing Issue",      data: spread(c.p, 1), backgroundColor: "#2C3B4D" },
-      { label: "Volume Spike",       data: spread(c.v, 2), backgroundColor: "#FFB162" },
-      { label: "Attribute Error",    data: spread(c.a, 3), backgroundColor: "#A35139" },
-      { label: "Forecast Deviation", data: spread(c.f, 4), backgroundColor: "#C9C1B1" },
-    ]},
+    data: {
+      labels: labels.map(l => l.length > 25 ? l.substring(0, 22) + '...' : l),
+      datasets: [{
+        label: "Total Anomalies",
+        data: chartData,
+        backgroundColor: ["#2C3B4D", "#FFB162", "#A35139", "#C9C1B1", "#7FA3C0"]
+      }]
+    },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: { duration: 350 },
       onClick(evt, elements) {
         if (!elements.length) return;
-        const dsIdx   = elements[0].datasetIndex;
-        const typeMap = ["Pricing Issue", "Volume Spike", "Attribute Error", "Forecast Deviation"];
-        const selType = typeMap[dsIdx];
-        const matched = currentData.filter(r =>
-          r.type === selType ||
-          (selType === "Forecast Deviation" && (r.type === "Forecast Deviation" || r.type === "Data Discrepancy"))
-        );
+        const idx = elements[0].index;
+        const selType = labels[idx];
+        const matched = currentData.filter(r => r.type === selType);
         if (matched.length) {
           setCF(new Set(matched.map(r => r.id)), "tier");
           showToast(`${selType}: ${matched.length} records`);
@@ -510,8 +489,8 @@ function buildTier(data) {
       },
       plugins: { legend: { display: false }, tooltip: { backgroundColor: "#1B2632" } },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: "#8a9dae", font: { size: 9 } } },
-        y: { stacked: true, grid: { color: "rgba(44,59,77,.06)" }, ticks: { color: "#8a9dae", font: { size: 9 } } }
+        x: { grid: { display: false }, ticks: { color: "#8a9dae", font: { size: 9 } } },
+        y: { grid: { color: "rgba(44,59,77,.06)" }, ticks: { color: "#8a9dae", font: { size: 9 } }, beginAtZero: true }
       }
     }
   });
@@ -520,26 +499,55 @@ function buildTier(data) {
 /* ═══════════════════════════════════════════
    GLOBAL FILTERS
 ═══════════════════════════════════════════ */
+function updateStateDropdown(baseData) {
+  // Extract unique 2-letter states from the available data
+  const states = Array.from(new Set(baseData.map(r => {
+    const parts = (r.region || "").split(',');
+    return parts.length > 1 ? parts[1].trim() : r.region;
+  }).filter(Boolean))).sort();
+
+  const dd = document.getElementById("dd-region");
+  if (!dd) return;
+
+  let html = `<div class="dropdown-item ${filters.state === 'All States' ? 'chosen' : ''}" onclick="pickFilter('state','All States','btn-region','lbl-region')"><div class="di-dot" style="background:#C9C1B1"></div>All States</div><div class="dropdown-divider"></div>`;
+
+  states.forEach((st, i) => {
+    const colors = ["#2C3B4D", "#FFB162", "#4A6B8A", "#A35139", "#7FA3C0"];
+    const color = colors[i % colors.length];
+    const isChosen = filters.state === st ? 'chosen' : '';
+    html += `<div class="dropdown-item ${isChosen}" onclick="pickFilter('state','${st}','btn-region','lbl-region')"><div class="di-dot" style="background:${color}"></div>${st}</div>`;
+  });
+
+  dd.innerHTML = html;
+}
+
 function applyFilters() {
   let data = [...ALL_DATA];
 
-  if (filters.region !== "All Regions") {
-    const cities = REGION_CITIES[filters.region] || [];
-    data = data.filter(r => cities.some(c => r.region.startsWith(c)));
-  }
+  // 1. Filter by Account
   if (filters.acct !== "All Types") {
     const ids = ACCT_IDS[filters.acct] || [];
     data = data.filter(r => ids.includes(r.id));
   }
 
+  // 2. Filter by Severity
   data = data.filter(r => r.score >= filters.sevLo && r.score <= filters.sevHi);
 
+  // 3. Filter by Date
   if (filters.date !== "All Time") {
     const skip = { "Last 30 Days": 3, "Q2 2025": 4, "Q1 2025": 2, "Last 6 Months": 1 }[filters.date] || 0;
     if (data.length > 4) data = data.filter((_, i) => i % 5 !== skip);
   }
 
-  if (!data.length) data = ALL_DATA.slice(0, 5);
+  // 4. Update dynamic State dropdown using data valid up to this point
+  updateStateDropdown(data);
+
+  // 5. Filter by State
+  if (filters.state !== "All States") {
+    data = data.filter(r => (r.region || "").includes(filters.state));
+  }
+
+  // REMOVED the artificial "ALL_DATA.slice(0, 5)" fallback to fix the math!
 
   currentData = data;
   cfIds = new Set(); cfSource = "";
@@ -650,7 +658,7 @@ function renderChips() {
   const bar   = document.getElementById("activeFilters");
   const chips = [];
   if (filters.date !== "All Time")      chips.push({ key: "date",   label: "Date: " + filters.date });
-  if (filters.region !== "All Regions") chips.push({ key: "region", label: "Region: " + filters.region });
+  if (filters.state !== "All States")   chips.push({ key: "state",  label: "State: " + filters.state });
   if (filters.acct !== "All Types")     chips.push({ key: "acct",   label: "Acct: " + filters.acct });
   if (filters.sevLo !== 0 || filters.sevHi !== 30)
     chips.push({ key: "sev", label: "Score: " + filters.sevLo + " – " + filters.sevHi });
@@ -660,10 +668,10 @@ function renderChips() {
 }
 
 function clearFilter(key) {
-  const def = { date: "All Time", region: "All Regions", acct: "All Types" };
+  const def = { date: "All Time", state: "All States", acct: "All Types" };
   const lbl = {
     date:   ["lbl-date",   "Date Range"],
-    region: ["lbl-region", "Region / State"],
+    state:  ["lbl-region", "State"],
     acct:   ["lbl-acct",   "Account Type"]
   };
   if (key === "sev") {

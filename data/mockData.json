@@ -1,27 +1,26 @@
 {
   "records": [
-    {"id":10567,"name":"Global Tech Inc.",      "region":"New York, NY",    "type":"Attribute Error",    "score":15.22,"reason":"Missing Field Value",              "weekIdx":8},
-    {"id":92813,"name":"Midwest Retail Group",  "region":"Chicago, IL",     "type":"Regional Pattern",   "score":23.37,"reason":"Unusual Pattern: ('CHICAGO','IL')","weekIdx":62},
-    {"id":84732,"name":"Pacific Logistics",     "region":"Los Angeles, CA", "type":"Volume Spike",       "score":18.45,"reason":"Sudden Increase in Orders",         "weekIdx":22},
-    {"id":67245,"name":"Sunshine Corp",         "region":"Miami, FL",       "type":"Forecast Deviation", "score":12.88,"reason":"Sales Drop vs Forecast",            "weekIdx":34},
-    {"id":45021,"name":"Horizon Bank",          "region":"Dallas, TX",      "type":"Data Discrepancy",   "score":10.75,"reason":"Duplicate Transaction ID",          "weekIdx":14},
-    {"id":33198,"name":"Blue Ridge Partners",   "region":"Atlanta, GA",     "type":"Pricing Issue",      "score":9.41, "reason":"Unusual Discount Applied",          "weekIdx":19},
-    {"id":71044,"name":"Summit Healthcare",     "region":"Chicago, IL",     "type":"Regional Pattern",   "score":20.11,"reason":"Class-of-Trade Mismatch",           "weekIdx":55},
-    {"id":28876,"name":"Coastal Distributors",  "region":"Seattle, WA",     "type":"Volume Spike",       "score":14.63,"reason":"3x Normal Order Volume",            "weekIdx":30},
-    {"id":55320,"name":"Ironclad Supply Co.",   "region":"Denver, CO",      "type":"Attribute Error",    "score":7.89, "reason":"Invalid NDC Format",                "weekIdx":43},
-    {"id":61002,"name":"NorthStar Pharma",      "region":"Boston, MA",      "type":"Forecast Deviation", "score":11.22,"reason":"Q2 Units Below Threshold",          "weekIdx":38},
-    {"id":77410,"name":"RedLine Retail",        "region":"Chicago, IL",     "type":"Pricing Issue",      "score":16.55,"reason":"Price Tier Mismatch",               "weekIdx":67},
-    {"id":48320,"name":"Apex Medical Group",    "region":"Houston, TX",     "type":"Attribute Error",    "score":13.40,"reason":"Missing Class-of-Trade",            "weekIdx":25},
-    {"id":91102,"name":"Sterling Finance",      "region":"New York, NY",    "type":"Data Discrepancy",   "score":8.77, "reason":"Account Mapping Error",             "weekIdx":11},
-    {"id":30471,"name":"LakeView Pharma",       "region":"Chicago, IL",     "type":"Regional Pattern",   "score":21.80,"reason":"Territory Realignment Flag",        "weekIdx":70},
-    {"id":66023,"name":"Omega Logistics",       "region":"Los Angeles, CA", "type":"Volume Spike",       "score":17.91,"reason":"Weekend Order Surge",               "weekIdx":47},
-    {"id":52219,"name":"ClearPath Health",      "region":"Atlanta, GA",     "type":"Forecast Deviation", "score":10.01,"reason":"Monthly Units Below Plan",          "weekIdx":16},
-    {"id":83400,"name":"TrueNorth Supplies",    "region":"Seattle, WA",     "type":"Pricing Issue",      "score":6.33, "reason":"Contract Price Override",           "weekIdx":5},
-    {"id":19988,"name":"Valiant Biotech",       "region":"Boston, MA",      "type":"Attribute Error",    "score":14.09,"reason":"Product NDC Mismatch",              "weekIdx":51},
-    {"id":40501,"name":"United Wholesale",      "region":"Dallas, TX",      "type":"Volume Spike",       "score":19.72,"reason":"Duplicate Shipment Detected",       "weekIdx":59},
-    {"id":73312,"name":"Meridian Healthcare",   "region":"Miami, FL",       "type":"Regional Pattern",   "score":22.50,"reason":"Cross-Territory Order Anomaly",     "weekIdx":74}
-  ],
-
+    {"id":10567,"name":"Global Tech Inc.",      "region":"New York, NY",    "type":"Attribute Detail + Account Pattern",    "score":15.22,"reason":"Unusual value in product_ndc: 701270110", "weekIdx":8},
+    {"id":92813,"name":"Midwest Retail Group",  "region":"Chicago, IL",     "type":"Attribute Detail + Account Pattern + Region/Territory", "score":23.37,"reason":"Unusual Pattern in Group: ('CHICAGO', 'IL') | Unusual value in account_pattern_deviation","weekIdx":62},
+    {"id":84732,"name":"Pacific Logistics",     "region":"Los Angeles, CA", "type":"Attribute Detail + Account Pattern",    "score":18.45,"reason":"Unusual value in sum_net_sales_units: 100", "weekIdx":22},
+    {"id":67245,"name":"Sunshine Corp",         "region":"Miami, FL",       "type":"Date Anomaly", "score":12.88,"reason":"Date older than training data: 2/2024", "weekIdx":34},
+    {"id":45021,"name":"Horizon Bank",          "region":"Dallas, TX",      "type":"Attribute Detail + Account Pattern",   "score":10.75,"reason":"Unusual value in class_of_trade: Surgery", "weekIdx":14},
+    {"id":33198,"name":"Blue Ridge Partners",   "region":"Atlanta, GA",     "type":"Attribute Detail + Account Pattern",      "score":9.41, "reason":"Unusual value in accounttype: Community Practice", "weekIdx":19},
+    {"id":71044,"name":"Summit Healthcare",     "region":"Chicago, IL",     "type":"Account Pattern + Attribute Detail + Date Anomaly + Region/Territory", "score":20.11,"reason":"Old sales data: December 2025 | Unusual Pattern in Group: ('CHICAGO', 'IL') | Unusual value in account_pattern_deviation", "weekIdx":55},
+    {"id":28876,"name":"Coastal Distributors",  "region":"Seattle, WA",     "type":"Attribute Detail + Account Pattern",       "score":14.63,"reason":"Unusual value in sum_net_sales_units: 90", "weekIdx":30},
+    {"id":55320,"name":"Ironclad Supply Co.",   "region":"Denver, CO",      "type":"Attribute Detail + Account Pattern",    "score":7.89, "reason":"Unusual value in client_group: IHC HEALTH SERVICES (VC)", "weekIdx":43},
+    {"id":61002,"name":"NorthStar Pharma",      "region":"Boston, MA",      "type":"Account Pattern + Attribute Detail + Date Anomaly", "score":11.22,"reason":"Old sales data: December 2025 | Unusual value in account_pattern_deviation", "weekIdx":38},
+    {"id":77410,"name":"RedLine Retail",        "region":"Chicago, IL",     "type":"Attribute Detail + Account Pattern + Region/Territory", "score":16.55,"reason":"Unusual Pattern in Group: ('CHICAGO', 'IL') | Unusual value in product_ndc: 70127011010", "weekIdx":67},
+    {"id":48320,"name":"Apex Medical Group",    "region":"Houston, TX",     "type":"Attribute Detail + Account Pattern",    "score":13.40,"reason":"Unusual value in accounttype: Children's Hospital", "weekIdx":25},
+    {"id":91102,"name":"Sterling Finance",      "region":"New York, NY",    "type":"Attribute Detail + Account Pattern",   "score":8.77, "reason":"Unusual value in sum_net_sales_units: 42", "weekIdx":11},
+    {"id":30471,"name":"LakeView Pharma",       "region":"Chicago, IL",     "type":"Attribute Detail + Account Pattern + Region/Territory", "score":21.80,"reason":"Unusual Pattern in Group: ('CHICAGO', 'IL') | Unusual value in account_pattern_deviation", "weekIdx":70},
+    {"id":66023,"name":"Omega Logistics",       "region":"Los Angeles, CA", "type":"Attribute Detail + Account Pattern",       "score":17.91,"reason":"Unusual value in sum_net_sales_units: -1", "weekIdx":47},
+    {"id":52219,"name":"ClearPath Health",      "region":"Atlanta, GA",     "type":"Attribute Detail + Account Pattern", "score":10.01,"reason":"Unusual value in sum_net_sales_units: 17", "weekIdx":16},
+    {"id":83400,"name":"TrueNorth Supplies",    "region":"Seattle, WA",     "type":"Attribute Detail + Account Pattern",      "score":6.33, "reason":"Unusual value in accounttype: nan", "weekIdx":5},
+    {"id":19988,"name":"Valiant Biotech",       "region":"Boston, MA",      "type":"Attribute Detail + Account Pattern",    "score":14.09,"reason":"Unusual value in class_of_trade: Research Facility", "weekIdx":51},
+    {"id":40501,"name":"United Wholesale",      "region":"Dallas, TX",      "type":"Date Anomaly",       "score":19.72,"reason":"Date older than training data: 12/2023", "weekIdx":59},
+    {"id":73312,"name":"Meridian Healthcare",   "region":"Miami, FL",       "type":"Attribute Detail + Account Pattern",   "score":22.50,"reason":"Unusual value in sum_net_sales_units: 6", "weekIdx":74}
+],  
   "regionCities": {
     "East":    ["New York","Boston","Atlanta"],
     "Central": ["Chicago","Dallas","Houston"],
@@ -59,12 +58,11 @@
   ],
 
   "typeBadgeMap": {
-    "Attribute Error":    "badge-attr",
-    "Regional Pattern":   "badge-reg",
-    "Volume Spike":       "badge-vol",
-    "Forecast Deviation": "badge-fore",
-    "Data Discrepancy":   "badge-disc",
-    "Pricing Issue":      "badge-disc"
+    "Account Pattern + Attribute Detail + Date Anomaly": "badge-attr",
+    "Account Pattern + Attribute Detail + Date Anomaly + Region/Territory": "badge-reg",
+    "Attribute Detail + Account Pattern": "badge-vol",
+    "Attribute Detail + Account Pattern + Region/Territory": "badge-fore",
+    "Date Anomaly": "badge-disc"
   },
 
   "timeSeries": {

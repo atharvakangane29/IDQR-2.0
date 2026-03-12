@@ -14,6 +14,16 @@
   <!-- App styles -->
   <link rel="stylesheet" href="assets/css/styles.css"/>
 </head>
+
+<script>
+  window.addEventListener('load', () => {
+    // Show toast if arriving from pipeline
+    if (document.referrer.includes('pipeline')) {
+      setTimeout(() => showToast('Model ready — dashboard loaded'), 400);
+    }
+  });
+</script>
+
 <body>
 
 <!-- ══════════════════════════════════════
@@ -56,26 +66,31 @@
       </div>
     </div>
 
-    <!-- Region / State -->
+    <!-- State -->
     <div style="position:relative">
       <button class="filter-btn" id="btn-region" onclick="toggleDD('dd-region','btn-region')">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <circle cx="6" cy="4.5" r="2.5" stroke="rgba(255,255,255,.7)" stroke-width="1.2"/>
           <path d="M6 7C3.5 7 1.5 8.2 1.5 9.5h9C10.5 8.2 8.5 7 6 7z" fill="rgba(255,255,255,.45)"/>
         </svg>
-        <span class="sel-label" id="lbl-region">Region / State</span>
+        <span class="sel-label" id="lbl-region">State</span>
         <svg class="caret" width="10" height="10" viewBox="0 0 10 10">
           <path d="M2 3.5l3 3 3-3" stroke="rgba(255,255,255,.7)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
         </svg>
       </button>
-      <div class="dropdown" id="dd-region">
-        <div class="dropdown-item chosen" onclick="pickFilter('region','All Regions','btn-region','lbl-region')"><div class="di-dot" style="background:#C9C1B1"></div>All Regions</div>
+      <div class="dropdown" id="dd-region" style="min-width:180px;max-height:320px;overflow-y:auto">
+        <div class="dropdown-item chosen" onclick="pickFilter('state','All States','btn-region','lbl-region')"><div class="di-dot" style="background:#C9C1B1"></div>All States</div>
         <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="pickFilter('region','East','btn-region','lbl-region')"><div class="di-dot" style="background:#2C3B4D"></div>East</div>
-        <div class="dropdown-item" onclick="pickFilter('region','Central','btn-region','lbl-region')"><div class="di-dot" style="background:#FFB162"></div>Central (Chicago)</div>
-        <div class="dropdown-item" onclick="pickFilter('region','West','btn-region','lbl-region')"><div class="di-dot" style="background:#4A6B8A"></div>West</div>
-        <div class="dropdown-item" onclick="pickFilter('region','South','btn-region','lbl-region')"><div class="di-dot" style="background:#A35139"></div>South</div>
-      </div>
+        <div class="dropdown-item" onclick="pickFilter('state','NY','btn-region','lbl-region')"><div class="di-dot" style="background:#2C3B4D"></div>New York (NY)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','IL','btn-region','lbl-region')"><div class="di-dot" style="background:#FFB162"></div>Illinois (IL)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','CA','btn-region','lbl-region')"><div class="di-dot" style="background:#4A6B8A"></div>California (CA)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','TX','btn-region','lbl-region')"><div class="di-dot" style="background:#A35139"></div>Texas (TX)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','FL','btn-region','lbl-region')"><div class="di-dot" style="background:#7FA3C0"></div>Florida (FL)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','GA','btn-region','lbl-region')"><div class="di-dot" style="background:#2C3B4D"></div>Georgia (GA)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','WA','btn-region','lbl-region')"><div class="di-dot" style="background:#FFB162"></div>Washington (WA)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','CO','btn-region','lbl-region')"><div class="di-dot" style="background:#4A6B8A"></div>Colorado (CO)</div>
+        <div class="dropdown-item" onclick="pickFilter('state','MA','btn-region','lbl-region')"><div class="di-dot" style="background:#A35139"></div>Massachusetts (MA)</div>
+        </div>
     </div>
 
     <!-- Account Type -->
@@ -170,7 +185,7 @@
 
     <!-- Max Anomaly Score — Gauge -->
     <div class="card gauge-card">
-      <div class="kpi-label" style="text-align:center;margin-bottom:8px">Max Anomaly Score</div>
+      <div class="kpi-label" style="text-align:center;margin-bottom:8px">Data Health Score</div>
       <div class="gauge-wrap">
         <svg width="160" height="88" viewBox="0 0 160 88">
           <!-- Track -->
@@ -206,16 +221,10 @@
       <div class="kpi-sub" id="kVolSub">Estimated exposure</div>
     </div>
 
-    <!-- Anomalies by Tier -->
+    <!-- Anomalies by type -->
     <div class="card">
-      <div class="card-title">Anomalies by Tier</div>
+      <div class="card-title">Total Anomalies by Anomaly Type</div>
       <div class="chart-wrap h90"><canvas id="tierChart"></canvas></div>
-      <div class="tier-legend">
-        <div class="leg-item"><div class="leg-dot" style="background:#2C3B4D"></div>Pricing</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#FFB162"></div>Volume</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#A35139"></div>Attribute</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#C9C1B1"></div>Forecast</div>
-      </div>
     </div>
 
   </div><!-- /.kpi-row -->
@@ -264,7 +273,7 @@
           <tr>
             <th onclick="sortTable('id')">Row ID</th>
             <th onclick="sortTable('name')">Account Name</th>
-            <th onclick="sortTable('region')">Region</th>
+            <th onclick="sortTable('region')">State</th>
             <th onclick="sortTable('type')">Anomaly Type</th>
             <th onclick="sortTable('score')">Score ↕</th>
             <th>Reason</th>
