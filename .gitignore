@@ -1,5 +1,11 @@
+#The file itself
+.gitignore
+
 # Ignore Excel files
 *.xlsx
 
 # Ignore PowerPoint files
 *.pptx
+
+# Folders
+Required_Docs/
