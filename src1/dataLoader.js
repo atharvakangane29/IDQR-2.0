@@ -13,7 +13,7 @@
 
 (async function loadData() {
   try {
-    const response = await fetch("data/mockData.json");
+    const response = await fetch("data1/mockData.json");
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     const json = await response.json();
     initWithData(json);          // defined in app.js
@@ -26,7 +26,7 @@
         <code style="font-size:.85rem;color:#666">${err.message}</code>
         <p style="font-size:.8rem;color:#999">
           Make sure the app is served over HTTP (not file://) and
-          <code>data/mockData.json</code> exists.
+          <code>data1/mockData.json</code> exists.
         </p>
       </div>`;
   }

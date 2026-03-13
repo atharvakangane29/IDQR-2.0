@@ -15,7 +15,7 @@ const DataKPIs = (() => {
     if (rendered) return;
     rendered = true;
 
-    const res  = await fetch('data/mockData.json');
+    const res  = await fetch('data1/mockData.json');
     const json = await res.json();
     const data = json.records;
 
@@ -65,7 +65,7 @@ const DataKPIs = (() => {
   function renderAccountTypeBar(data) {
     const counts = {};
     data.forEach(function(r) { counts[r.type] = (counts[r.type] || 0) + 1; });
-    const sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; });
+    const sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
     const max = sorted[0][1];
 
     const COLORS = {
@@ -102,15 +102,23 @@ const DataKPIs = (() => {
 
     const container = document.getElementById('weeklySpreadZones');
     if (!container) return;
+
+    const start = new Date('2024-07-07');
+    const toDate = function(wk) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + wk * 7);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
     const zones = [
-      { label: 'Early period',  count: early,  color: '#7FA3C0' },
-      { label: 'Mid period',    count: mid,    color: '#FFB162' },
-      { label: 'Recent period', count: recent, color: '#A35139' },
+      { label: 'Early period',  count: early,  color: '#7FA3C0', range: toDate(minWk) + ' - ' + toDate(Math.floor(minWk + third)) },
+      { label: 'Mid period',    count: mid,    color: '#FFB162', range: toDate(Math.floor(minWk + third)) + ' - ' + toDate(Math.floor(minWk + 2 * third)) },
+      { label: 'Recent period', count: recent, color: '#A35139', range: toDate(Math.floor(minWk + 2 * third)) + ' - ' + toDate(maxWk) },
     ];
     container.innerHTML = zones.map(function(z) {
       return '<div class="score-zone-row">' +
         '<span class="score-zone-dot" style="background:' + z.color + '"></span>' +
-        '<span class="score-zone-label">' + z.label + '</span>' +
+        '<div class="score-zone-label" style="display:flex; flex-direction:column; line-height:1.2;">' + z.label + '<span style="font-size: 10px; color: #aaa; margin-top: 2px;">' + z.range + '</span></div>' +
         '<span class="score-zone-count">' + z.count + '</span>' +
         '<span class="score-zone-pct">' + ((z.count / n) * 100).toFixed(0) + '%</span>' +
         '</div>';

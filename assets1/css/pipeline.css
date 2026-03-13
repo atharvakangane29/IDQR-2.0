@@ -28,9 +28,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ─── SHARED PIPELINE HEADER (small top bar on screens 2-5) ─── */
@@ -89,9 +90,11 @@
   border-radius: 50%;
   background: currentColor;
   flex-shrink: 0;
+  display: none;
 }
 .pipe-step.done .pipe-step-dot {
   background: #6BBF8E;
+  display: block;
 }
 
 /* ─── SCREEN 1 — LANDING ─── */
@@ -125,6 +128,7 @@
   text-align: center;
   max-width: 680px;
   padding: 0 24px;
+  margin: auto 0;
 }
 .landing-badge {
   display: inline-flex;
@@ -210,7 +214,7 @@
   background: var(--amber);
   color: var(--truffle);
   font-family: 'DM Sans', sans-serif;
-  font-size: .88rem;
+  font-size: 0.875rem;  
   font-weight: 700;
   padding: 13px 26px;
   border-radius: 8px;
@@ -222,6 +226,17 @@
   background: #ffc07a;
   transform: translateY(-1px);
 }
+
+.btn-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(255,177,98,.35);
+}
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -229,7 +244,7 @@
   background: rgba(255,255,255,.06);
   color: rgba(255,255,255,.7);
   font-family: 'DM Sans', sans-serif;
-  font-size: .88rem;
+  font-size: 0.875rem;
   font-weight: 500;
   padding: 13px 22px;
   border-radius: 8px;
@@ -261,7 +276,7 @@
   margin-bottom: 4px;
 }
 .pipe-screen-sub {
-  font-size: .88rem;
+  font-size: 0.875rem;
   color: #888;
   margin-bottom: 8px;
 }
@@ -298,7 +313,7 @@
   color: var(--blue);
 }
 .dropzone-sub {
-  font-size: .78rem;
+  font-size: 0.75rem;
   color: #aaa;
 }
 .dropzone-link {
@@ -314,7 +329,7 @@
   border: 1px solid rgba(107,191,142,.3);
   border-radius: 10px;
   padding: 14px 18px;
-  font-size: .85rem;
+  font-size: 0.875rem;
   color: #2a7a4e;
 }
 .upload-success.show { display: flex; }
@@ -340,12 +355,12 @@
   gap: 12px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--sand);
-  font-size: .82rem;
+  font-size: 0.875rem;
 }
 .mapping-row:last-child { border-bottom: none; }
 .mapping-row.header {
   background: rgba(44,59,77,.04);
-  font-size: .68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: .8px;
   text-transform: uppercase;
@@ -375,7 +390,7 @@
   padding-top: 4px;
 }
 .pipe-skip-link {
-  font-size: .8rem;
+  font-size: 0.875rem;
   color: #aaa;
   cursor: pointer;
   text-decoration: underline;
@@ -426,7 +441,7 @@
   color: var(--icon-color, var(--blue-mid));
 }
 .data-kpi-label {
-  font-size: .68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: .9px;
   text-transform: uppercase;
@@ -441,7 +456,7 @@
   margin-bottom: 4px;
 }
 .data-kpi-sub {
-  font-size: .72rem;
+  font-size: 0.75rem;
   color: #aaa;
 }
 .kpis-bottom-row {
@@ -521,10 +536,11 @@
 }
 .hyperparams-content {
   width: 100%;
-  max-width: 820px;
+  max-width: 920px;
   padding: 72px 24px 24px;
   display: flex;
   flex-direction: column;
+  margin: auto 0;
   gap: 20px;
 }
 .param-grid {
@@ -546,12 +562,12 @@
   margin-bottom: 6px;
 }
 .param-card-title {
-  font-size: .82rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--truffle);
 }
 .param-card-desc {
-  font-size: .76rem;
+  font-size: 0.75rem;
   color: #999;
   margin-bottom: 16px;
   line-height: 1.5;
@@ -603,7 +619,7 @@
   border: 1.5px solid var(--oatmeal);
   background: transparent;
   font-family: 'DM Sans', sans-serif;
-  font-size: .8rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--blue-mid);
   cursor: pointer;
@@ -629,7 +645,7 @@
   border: 1.5px solid var(--oatmeal);
   background: transparent;
   font-family: 'DM Sans', sans-serif;
-  font-size: .82rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--blue-mid);
   cursor: pointer;
@@ -650,7 +666,7 @@
   border: 1.5px solid var(--oatmeal);
   background: var(--card);
   font-family: 'DM Sans', sans-serif;
-  font-size: .84rem;
+  font-size: 0.875rem;
   color: var(--blue);
   cursor: pointer;
   appearance: none;
@@ -714,6 +730,7 @@
   flex-direction: column;
   gap: 32px;
   align-items: center;
+  margin: auto 0;
 }
 .training-header {
   text-align: center;
@@ -725,7 +742,7 @@
   margin-bottom: 8px;
 }
 .training-sub {
-  font-size: .88rem;
+  font-size: 0.875rem;
   color: rgba(255,255,255,.4);
 }
 

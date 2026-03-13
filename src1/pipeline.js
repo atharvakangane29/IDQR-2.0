@@ -27,7 +27,7 @@ const Pipeline = (() => {
       5: () => {
         // hand off to existing app.js
         if (typeof initWithData === 'function') {
-          fetch('data/mockData.json')
+          fetch('data1/mockData.json')
             .then(r => r.json())
             .then(json => initWithData(json));
         }

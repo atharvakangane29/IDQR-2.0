@@ -6,8 +6,8 @@
   <title>IDQR</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="assets/css/styles.css"/>
-  <link rel="stylesheet" href="assets/css/pipeline.css"/>
+  <link rel="stylesheet" href="assets1/css/styles.css"/>
+  <link rel="stylesheet" href="assets1/css/pipeline.css"/>
 </head>
 <body>
 
@@ -98,19 +98,20 @@
   <!-- Top bar -->
   <div class="pipe-topbar">
     <div class="pipe-topbar-logo">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <!-- <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="1" y="12" width="5" height="11" rx="1.5" fill="#FFB162"/>
         <rect x="9" y="6" width="5" height="17" rx="1.5" fill="#7FA3C0"/>
         <rect x="17" y="1" width="5" height="22" rx="1.5" fill="#A35139"/>
-      </svg>
-      <span class="pipe-topbar-title">IDQR 2.0</span>
+      </svg> -->
+      <img src="assets1/img/logo.png" width="24" height="24">
+      <span class="pipe-topbar-title">IDQR</span>
     </div>
     <nav class="pipe-steps">
-      <div class="pipe-step active" ><span class="pipe-step-dot"></span>Upload</div>
-      <div class="pipe-step"        ><span class="pipe-step-dot"></span>Review Data</div>
-      <div class="pipe-step"        ><span class="pipe-step-dot"></span>Configure</div>
-      <div class="pipe-step"        ><span class="pipe-step-dot"></span>Train</div>
-      <div class="pipe-step"        ><span class="pipe-step-dot"></span>Dashboard</div>
+      <div class="pipe-step active">Upload</div>
+      <div class="pipe-step">Review Data</div>
+      <div class="pipe-step">Configure</div>
+      <div class="pipe-step">Train</div>
+      <div class="pipe-step">Dashboard</div>
     </nav>
   </div>
 
@@ -186,12 +187,13 @@
 <section class="pipeline-screen screen-kpis" id="screen-kpis">
   <div class="pipe-topbar">
     <div class="pipe-topbar-logo">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <!-- <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="1" y="12" width="5" height="11" rx="1.5" fill="#FFB162"/>
         <rect x="9" y="6" width="5" height="17" rx="1.5" fill="#7FA3C0"/>
         <rect x="17" y="1" width="5" height="22" rx="1.5" fill="#A35139"/>
-      </svg>
-      <span class="pipe-topbar-title">IDQR 2.0</span>
+      </svg> -->
+      <img src="assets1/img/logo.png" width="24" height="24">
+      <span class="pipe-topbar-title">IDQR</span>
     </div>
     <nav class="pipe-steps">
       <div class="pipe-step done"  ><span class="pipe-step-dot"></span>Upload</div>
@@ -295,7 +297,7 @@
     <div class="kpis-bottom-row">
 
       <div class="acct-type-chart-card">
-        <div class="card-title" style="margin-bottom:0">Records by Account Type</div>
+        <div class="card-title" style="margin-bottom:0">Top 5 Records by Account Type</div>
         <div class="acct-type-bars" id="acctTypeBars">
           <div style="color:#aaa;font-size:.8rem;padding:16px 0">Loading…</div>
         </div>
@@ -329,12 +331,13 @@
 <section class="pipeline-screen screen-hyperparams" id="screen-hyperparams">
   <div class="pipe-topbar">
     <div class="pipe-topbar-logo">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <!-- <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <rect x="1" y="12" width="5" height="11" rx="1.5" fill="#FFB162"/>
         <rect x="9" y="6" width="5" height="17" rx="1.5" fill="#7FA3C0"/>
         <rect x="17" y="1" width="5" height="22" rx="1.5" fill="#A35139"/>
-      </svg>
-      <span class="pipe-topbar-title">IDQR 2.0</span>
+      </svg> -->
+      <img src="assets1/img/logo.png" width="24" height="24">
+      <span class="pipe-topbar-title">IDQR</span>
     </div>
     <nav class="pipe-steps">
       <div class="pipe-step done"  ><span class="pipe-step-dot"></span>Upload</div>
@@ -571,11 +574,12 @@
   <!-- HEADER (from idqr.html) -->
   <header>
     <div class="logo">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <!-- <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="1"  y="12" width="5" height="11" rx="1.5" fill="#FFB162"/>
         <rect x="9"  y="6"  width="5" height="17" rx="1.5" fill="#7FA3C0"/>
         <rect x="17" y="1"  width="5" height="22" rx="1.5" fill="#A35139"/>
-      </svg>
+      </svg> -->
+      <img src="assets1/img/logo.png" width="24" height="24">
       <span class="logo-title">IDQR</span>
       <!-- <span class="logo-sub">Intelligent Data Quality Review</span> -->
     </div>
@@ -620,17 +624,19 @@
           <div class="dropdown-item chosen" onclick="pickFilter('acct','All Types','btn-acct','lbl-acct')"><div class="di-dot" style="background:#C9C1B1"></div>All Types</div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-item" onclick="pickFilter('acct','Long Term Care Pharmacy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#7FA3C0"></div>Long Term Care Pharmacy</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Long Term Care','btn-acct','lbl-acct')"><div class="di-dot" style="background:#7FA3C0"></div>Long Term Care</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Specialty Pharmacy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#FFB162"></div>Specialty Pharmacy</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Pharmacy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#FFB162"></div>Pharmacy</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Community Practice','btn-acct','lbl-acct')"><div class="di-dot" style="background:#4A6B8A"></div>Community Practice</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Community Hospital','btn-acct','lbl-acct')"><div class="di-dot" style="background:#4A6B8A"></div>Community Hospital</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Academic NCI/NCCN','btn-acct','lbl-acct')"><div class="di-dot" style="background:#A35139"></div>Academic NCI/NCCN</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Academic','btn-acct','lbl-acct')"><div class="di-dot" style="background:#A35139"></div>Academic</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Childrens Hospital','btn-acct','lbl-acct')"><div class="di-dot" style="background:#2C3B4D"></div>Childrens Hospital</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','VA','btn-acct','lbl-acct')"><div class="di-dot" style="background:#2C3B4D"></div>VA</div>
-          <div class="dropdown-item" onclick="pickFilter('acct','Other','btn-acct','lbl-acct')"><div class="di-dot" style="background:#C9C1B1"></div>Other</div>
-        </div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Other','btn-acct','lbl-acct')"><div class="di-dot" style="background:#C9C1B1"></div>Other</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Long Term Care Pharcy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#7FA3C0"></div>Long Term Care Pharcy</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Specialty Pharmacy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#FFB162"></div>Specialty Pharmacy</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Community Practice','btn-acct','lbl-acct')"><div class="di-dot" style="background:#4A6B8A"></div>Community Practice</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Academic NCI/NCCN','btn-acct','lbl-acct')"><div class="di-dot" style="background:#A35139"></div>Academic NCI/NCCN</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','VA','btn-acct','lbl-acct')"><div class="di-dot" style="background:#2C3B4D"></div>VA</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Pharmacy','btn-acct','lbl-acct')"><div class="di-dot" style="background:#FFB162"></div>Pharmacy</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Long Term Care','btn-acct','lbl-acct')"><div class="di-dot" style="background:#7FA3C0"></div>Long Term Care</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Academic','btn-acct','lbl-acct')"><div class="di-dot" style="background:#A35139"></div>Academic</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Childrens Hospital','btn-acct','lbl-acct')"><div class="di-dot" style="background:#2C3B4D"></div>Childrens Hospital</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Community Hospital','btn-acct','lbl-acct')"><div class="di-dot" style="background:#4A6B8A"></div>Community Hospital</div>
+        <div class="dropdown-item" onclick="pickFilter('acct','Childrens Hospital','btn-acct','lbl-acct')"><div class="di-dot" style="background:#2C3B4D"></div>Children's Hospital</div>        
+    </div>
       </div>
       <div class="sev-pill">
         <span style="white-space:nowrap">Score</span>
@@ -744,13 +750,13 @@
 <!-- ══════════════════════════════════════
      SCRIPTS — load order matters
 ══════════════════════════════════════ -->
-<script src="src/pipeline.js"></script>
-<script src="src/views/landing.js"></script>
-<script src="src/views/dataUpload.js"></script>
-<script src="src/views/dataKPIs.js"></script>
-<script src="src/views/hyperparams.js"></script>
-<script src="src/views/training.js"></script>
-<script src="src/app.js"></script>
+<script src="src1/pipeline.js"></script>
+<script src="src1/views/landing.js"></script>
+<script src="src1/views/dataUpload.js"></script>
+<script src="src1/views/dataKPIs.js"></script>
+<script src="src1/views/hyperparams.js"></script>
+<script src="src1/views/training.js"></script>
+<script src="src1/app.js"></script>
 <!-- dataLoader is NOT included here — app.js is booted by pipeline.js at screen 5 -->
 
 </body>

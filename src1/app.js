@@ -162,7 +162,7 @@ function renderTable(data) {
       <td>${r.region}</td>
       <td><span class="badge ${TYPE_BADGE[r.type] || "badge-disc"}">${r.type}</span></td>
       <td><span class="score-val ${scoreClass(r.score)}">${r.score.toFixed(2)}</span></td>
-      <td style="color:#666;font-size:.79rem">${r.reason}</td>
+      <td style="color:#666;font-size:0.875rem">${r.reason}</td>
     </tr>`;
   }).join("");
 }
