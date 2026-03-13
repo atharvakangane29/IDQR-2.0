@@ -15,9 +15,14 @@ const DataKPIs = (() => {
     if (rendered) return;
     rendered = true;
 
-    const res  = await fetch('data1/mockData.json');
-    const json = await res.json();
-    const data = json.records;
+    let data;
+    if (window._uploadedRecords && window._uploadedRecords.length > 0) {
+      data = window._uploadedRecords;
+    } else {
+      const res  = await fetch('data1/mockData.json');
+      const json = await res.json();
+      data = json.records;
+    }
 
     renderKPICards(data);
     renderAccountTypeBar(data);
@@ -26,55 +31,87 @@ const DataKPIs = (() => {
 
   function renderKPICards(data) {
     // Total Accounts
-    set('kpiTotalAccounts',    data.length);
+    const uniqueAccounts = new Set(data.map(r => r.id)).size;
+    set('kpiTotalAccounts',    uniqueAccounts);
     set('kpiTotalAccountsSub', 'Unique account IDs in dataset');
 
-    // Total Net Sales Units (derived from account ID — no score involved)
-    const totalVol = data.reduce((s, r) => s + ((r.id * 17 + 200) % 900) + 300, 0);
+    // Total Net Sales Units — use real vol field if available, else derive
+    const totalVol = data.reduce(function(s, r) {
+      return s + (r.vol !== undefined ? r.vol : ((r.id * 17 + 200) % 900) + 300);
+    }, 0);
     set('kpiTotalVol',    totalVol.toLocaleString());
-    set('kpiTotalVolSub', '~$' + (totalVol * 0.096).toFixed(0) + 'K estimated exposure');
+    set('kpiTotalVolSub', 'Sum of net sales units');
 
-    // Unique Regions
-    const regions = new Set(data.map(r => r.region)).size;
+    // Unique States (more meaningful than full region string)
+    const regions = new Set(data.map(r => r.state).filter(Boolean)).size;
     set('kpiRegions',    regions);
-    set('kpiRegionsSub', 'Unique cities / territories');
+    set('kpiRegionsSub', 'Unique states covered');
 
     // Unique Account Types
-    const types = new Set(data.map(r => r.type)).size;
+    const types = new Set(data.map(r => r.accounttype).filter(Boolean)).size;
     set('kpiAcctTypes',    types);
     set('kpiAcctTypesSub', 'Distinct account categories');
 
-    // Date Range — derived from week_index
-    const minWk = Math.min(...data.map(r => r.weekIdx));
-    const maxWk = Math.max(...data.map(r => r.weekIdx));
-    const start = new Date('2024-07-07');
-    const toDate = function(wk) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + wk * 7);
-      return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-    };
-    set('kpiDateRange',    (maxWk - minWk) + ' wks');
-    set('kpiDateRangeSub', toDate(minWk) + ' to ' + toDate(maxWk));
+    // Date Range — use real invoiceDate if available, else fall back to weekIdx
+    const realDates = data.map(r => r.invoiceDate).filter(Boolean);
+    let dateRangeStr, dateSubStr, avgPerWk, avgSubStr;
 
-    // Records per week avg
-    const avgPerWk = (data.length / (maxWk - minWk || 1)).toFixed(1);
+    if (realDates.length > 0) {
+      const minDate = new Date(Math.min(...realDates.map(d => d.getTime())));
+      const maxDate = new Date(Math.max(...realDates.map(d => d.getTime())));
+      const fmt = function(d) {
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      };
+      const spanDays = Math.round((maxDate - minDate) / (1000 * 60 * 60 * 24));
+      const spanWks  = Math.round(spanDays / 7);
+      dateRangeStr = spanWks + ' wks';
+      dateSubStr   = fmt(minDate) + ' – ' + fmt(maxDate);
+
+      // Avg per week using real span
+      avgPerWk = (data.length / (spanWks || 1)).toFixed(1);
+      avgSubStr = 'Avg records per week';
+    } else {
+      const weekIdxs = data.map(r => r.weekIdx).filter(n => !isNaN(n));
+      const minWk    = Math.min(...weekIdxs);
+      const maxWk    = Math.max(...weekIdxs);
+      const start    = window._dataEpoch || new Date('2024-07-07');
+      const toDate   = function(wk) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + wk * 7);
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      };
+      dateRangeStr = (maxWk - minWk) + ' periods';
+      dateSubStr   = toDate(minWk) + ' – ' + toDate(maxWk);
+      const buckets = new Set(data.map(r => r.weekIdx)).size;
+      avgPerWk  = (data.length / (buckets || 1)).toFixed(1);
+      avgSubStr = 'Avg records per time period';
+    }
+
+    set('kpiDateRange',    dateRangeStr);
+    set('kpiDateRangeSub', dateSubStr);
     set('kpiWeeklyAvg',    avgPerWk);
-    set('kpiWeeklyAvgSub', 'Avg records per week');
+    set('kpiWeeklyAvgSub', avgSubStr);
   }
 
   function renderAccountTypeBar(data) {
+    const FIXED_TYPES = [
+      'Long Term Care Pharmacy',
+      'Specialty Pharmacy',
+      'Pharmacy',
+      'Community Practice',
+      'Childrens Hospital',
+    ];
     const counts = {};
-    data.forEach(function(r) { counts[r.type] = (counts[r.type] || 0) + 1; });
-    const sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
-    const max = sorted[0][1];
+    data.forEach(function(r) { if (r.accounttype) counts[r.accounttype] = (counts[r.accounttype] || 0) + 1; });
+    const sorted = FIXED_TYPES.map(t => [t, counts[t] || 0]);
+    const max = Math.max(...sorted.map(e => e[1]), 1);
 
     const COLORS = {
-      'Attribute Error':    '#A35139',
-      'Regional Pattern':   '#FFB162',
-      'Volume Spike':       '#4A6B8A',
-      'Forecast Deviation': '#7FA3C0',
-      'Data Discrepancy':   '#C9C1B1',
-      'Pricing Issue':      '#2C3B4D',
+      'Long Term Care Pharmacy': '#2C3B4D',
+      'Specialty Pharmacy':      '#FFB162',
+      'Pharmacy':                '#4A6B8A',
+      'Community Practice':      '#7FA3C0',
+      'Childrens Hospital':      '#A35139',
     };
 
     const container = document.getElementById('acctTypeBars');

@@ -25,8 +25,41 @@ const Pipeline = (() => {
       2: () => DataKPIs && DataKPIs.init(),
       4: () => Training && Training.init(),
       5: () => {
-        // hand off to existing app.js
-        if (typeof initWithData === 'function') {
+        if (typeof initWithData !== 'function') return;
+
+        if (window._uploadedRecords && window._uploadedRecords.length > 0) {
+          // Use uploaded CSV data — only fetch mock for typeBadgeMap/regionCities schema
+          fetch('data1/mockData.json')
+            .then(r => r.json())
+            .then(function(json) {
+              // Build typeBadgeMap dynamically from uploaded data
+              const badgeMap = {};
+              window._uploadedRecords.forEach(function(r) {
+                if (r.type && !badgeMap[r.type]) {
+                  const t = r.type.toLowerCase();
+                  if      (t.includes('region') || t.includes('territory')) badgeMap[r.type] = 'badge-reg';
+                  else if (t.includes('date'))                               badgeMap[r.type] = 'badge-disc';
+                  else if (t.includes('attribute'))                          badgeMap[r.type] = 'badge-vol';
+                  else if (t.includes('account'))                            badgeMap[r.type] = 'badge-attr';
+                  else                                                       badgeMap[r.type] = 'badge-fore';
+                }
+              });
+
+              json.records        = window._uploadedRecords;
+              json.typeBadgeMap   = badgeMap;
+              // Build accountTypeIds from uploaded data
+              const acctIds = {};
+              window._uploadedRecords.forEach(function(r) {
+                if (r.accounttype) {
+                  if (!acctIds[r.accounttype]) acctIds[r.accounttype] = [];
+                  acctIds[r.accounttype].push(r.id);
+                }
+              });
+              json.accountTypeIds = acctIds;
+              console.log('[IDQR] Initializing dashboard with', json.records.length, 'uploaded records');
+              initWithData(json);
+            });
+        } else {
           fetch('data1/mockData.json')
             .then(r => r.json())
             .then(json => initWithData(json));

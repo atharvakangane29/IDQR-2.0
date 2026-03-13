@@ -5,22 +5,19 @@
 
 const DataUpload = (() => {
 
-  const EXPECTED_COLUMNS = [
-    { field: 'account_id',   label: 'Account ID',   type: 'number',  example: '10567' },
-    { field: 'account_name', label: 'Account Name', type: 'string',  example: 'NorthStar Pharma' },
-    { field: 'region',       label: 'Region',       type: 'string',  example: 'Boston, MA' },
-    { field: 'account_type', label: 'Account Type', type: 'string',  example: 'Specialty Pharmacy' },
-    { field: 'week_index',   label: 'Week Index',   type: 'integer', example: '22' },
+  // What to show in the mapping table UI
+  const DISPLAY_MAPPINGS = [
+    { csvCol: 'clientid',    internalField: 'account_id',   label: 'Account ID'   },
+    { csvCol: 'accountname', internalField: 'account_name', label: 'Account Name' },
+    { csvCol: 'state',       internalField: 'region',       label: 'Region/State' },
+    { csvCol: 'accounttype', internalField: 'account_type', label: 'Account Type' },
+    { csvCol: 'rowid',       internalField: 'rowid',        label: 'Row ID'       },
   ];
 
-  // Simulated auto-mapping: in real backend, this parses actual CSV headers
-  const MOCK_USER_COLUMNS = [
-    'acct_id', 'acct_name', 'territory', 'acct_type', 'wk_idx'
-  ];
+  const MOCK_USER_COLUMNS = ['clientid','accountname','state','accounttype','rowid'];
 
   function init() {
     setupDropzone();
-    // mapping table renders only after file upload or sample data selection
   }
 
   function setupDropzone() {
@@ -47,56 +44,141 @@ const DataUpload = (() => {
     }
   }
 
+  // Parse m/dd/yyyy or mm/dd/yyyy → JS Date
+  function parseInvoiceDate(str) {
+    if (!str) return null;
+    const s = String(str).trim();
+    const parts = s.split('/');
+    if (parts.length === 3) {
+      const month = parseInt(parts[0], 10) - 1;
+      const day   = parseInt(parts[1], 10);
+      const year  = parseInt(parts[2], 10);
+      if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+        return new Date(year, month, day);
+      }
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function buildRecords(rows) {
+    // Only keep rows where score > 9.5
+    const anomalyRows = rows.filter(function(row) {
+      return parseFloat(row['score']) > 9.5;
+    });
+
+    // Find earliest invoice_date to use as epoch for weekIdx calculation
+    const allDates = anomalyRows
+      .map(r => parseInvoiceDate(r['invoice_date']))
+      .filter(Boolean);
+
+    const epochDate = allDates.length > 0
+      ? new Date(Math.min(...allDates.map(d => d.getTime())))
+      : new Date('2024-07-07');
+
+    window._dataEpoch = epochDate;
+
+    const msPerWk = 7 * 24 * 60 * 60 * 1000;
+
+    return anomalyRows.map(function(row, i) {
+      const d       = parseInvoiceDate(row['invoice_date']);
+      const weekIdx = d
+        ? Math.round((d.getTime() - epochDate.getTime()) / msPerWk)
+        : (i % 78);
+
+      return {
+        id:          parseInt(row['clientid'])              || parseInt(row['rowid']) || i,
+        name:        row['accountname']                     || 'Unknown',
+        region:      (row['city'] || '') + (row['state'] ? ', ' + row['state'] : ''),
+        state:       row['state']                           || '',
+        type:        row['anomaly_type']                    || '',
+        score:       parseFloat(row['score'])               || 0,
+        reason:      row['reason']                          || '',
+        accounttype: row['accounttype']                     || '',
+        weekIdx:     weekIdx,
+        vol:         parseFloat(row['sum_net_sales_units']) || 0,
+        invoiceDate: d,
+        rowid:       parseInt(row['rowid'])                 || i,
+      };
+    });
+  }
+
   function handleFile(file) {
-    // In production: parse CSV headers and call renderMappingTable(headers)
-    // For now: simulate success with mock columns
-    const successEl = document.getElementById('uploadSuccess');
+    const successEl  = document.getElementById('uploadSuccess');
     const fileNameEl = document.getElementById('uploadFileName');
     const rowCountEl = document.getElementById('uploadRowCount');
     if (fileNameEl) fileNameEl.textContent = file.name;
-    if (rowCountEl) rowCountEl.textContent = '20 records detected';
-    if (successEl) successEl.classList.add('show');
-    // Show mapping table
-    renderMappingTable(MOCK_USER_COLUMNS);
-    document.getElementById('mappingSection').style.display = 'block';
-    enableContinue();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text   = e.target.result;
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+      const rows   = parsed.data;
+
+      // Build records — only score > 9.5 rows
+      window._uploadedRecords = buildRecords(rows);
+      window._uploadedMeta    = { totalRows: rows.length, fields: parsed.meta.fields || [] };
+
+      // Persist to sessionStorage so idqr2.html can read after navigation
+      try {
+        sessionStorage.setItem('idqr_records', JSON.stringify(window._uploadedRecords));
+        sessionStorage.setItem('idqr_epoch',   window._dataEpoch ? window._dataEpoch.toISOString() : '');
+        console.log('[IDQR] Saved', window._uploadedRecords.length, 'anomaly records (score > 9.5) to sessionStorage');
+      } catch(err) {
+        console.warn('[IDQR] sessionStorage save failed (data too large?):', err);
+      }
+
+      if (rowCountEl) rowCountEl.textContent = window._uploadedRecords.length + ' anomaly records detected';
+      if (successEl)  successEl.classList.add('show');
+
+      renderMappingTable(parsed.meta.fields || []);
+      document.getElementById('mappingSection').style.display = 'block';
+      enableContinue();
+    };
+    reader.readAsText(file);
   }
 
-  function renderMappingTable(userCols) {
-    const tbody = document.getElementById('mappingBody');
+  function renderMappingTable(availableCols) {
+    const tbody  = document.getElementById('mappingBody');
     if (!tbody) return;
-    tbody.innerHTML = EXPECTED_COLUMNS.map((col, i) => {
-      const userCol = userCols[i] || '(not found)';
-      const matched = !!userCols[i];
-      return `<div class="mapping-row">
-        <span class="mapping-col-user">${userCol}</span>
-        <span class="mapping-col-arrow">→</span>
-        <span class="mapping-col-expected">${col.field}</span>
-        <span class="mapping-status ${matched ? 'ok' : 'warn'}">
-          <span class="status-dot"></span>
-          ${matched ? 'Mapped' : 'Missing'}
-        </span>
-      </div>`;
+    const colSet = new Set((availableCols || []).map(c => c.toLowerCase().trim()));
+    tbody.innerHTML = DISPLAY_MAPPINGS.map(function(m) {
+      const found = colSet.has(m.csvCol.toLowerCase());
+      return '<div class="mapping-row">' +
+        '<span class="mapping-col-user">'     + m.csvCol        + '</span>' +
+        '<span class="mapping-col-arrow">→</span>' +
+        '<span class="mapping-col-expected">' + m.internalField + '</span>' +
+        '<span class="mapping-status '        + (found ? 'ok' : 'warn') + '">' +
+          '<span class="status-dot"></span>'  +
+          (found ? 'Mapped' : 'Missing')      +
+        '</span>' +
+        '</div>';
     }).join('');
   }
 
   function enableContinue() {
     const btn = document.getElementById('uploadContinueBtn');
     if (btn) {
-      btn.disabled = false;
+      btn.disabled      = false;
       btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
+      btn.style.cursor  = 'pointer';
     }
   }
 
-  // Use sample data — skip real upload, show mock mapping immediately
   function useSampleData() {
-    const successEl = document.getElementById('uploadSuccess');
+    const successEl  = document.getElementById('uploadSuccess');
     const fileNameEl = document.getElementById('uploadFileName');
     const rowCountEl = document.getElementById('uploadRowCount');
     if (fileNameEl) fileNameEl.textContent = 'mockData.json (sample)';
     if (rowCountEl) rowCountEl.textContent = '20 records loaded';
-    if (successEl) successEl.classList.add('show');
+    if (successEl)  successEl.classList.add('show');
+
+    // Clear uploaded data so mock is used
+    window._uploadedRecords = null;
+    window._dataEpoch       = null;
+    sessionStorage.removeItem('idqr_records');
+    sessionStorage.removeItem('idqr_epoch');
+
     const mappingSection = document.getElementById('mappingSection');
     if (mappingSection) mappingSection.style.display = 'block';
     renderMappingTable(MOCK_USER_COLUMNS);

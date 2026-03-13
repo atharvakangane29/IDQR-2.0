@@ -6,6 +6,7 @@
   <title>IDQR</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link rel="stylesheet" href="assets1/css/styles.css"/>
   <link rel="stylesheet" href="assets1/css/pipeline.css"/>
 </head>
@@ -30,7 +31,9 @@
       <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
       Anomaly Detection Platform
     </div> -->
-
+		<img src="assets1/img/logo.png" width="68" height="68">
+		<br>
+		<br>
     <h1 class="landing-title">
       Intelligent<br/>Data Quality Review
     </h1>
@@ -658,15 +661,22 @@
   <div class="search-wrap">
     <div class="search-inner">
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="#aaa" stroke-width="1.4"/><path d="M10 10l3.5 3.5" stroke="#aaa" stroke-width="1.4" stroke-linecap="round"/></svg>
-      <input type="text" id="nlSearch" placeholder="Show me all critical territory anomalies in Chicago for Q2"/>
-      <button onclick="runNLSearch()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#2C3B4D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <input type="text" id="nlSearch" placeholder="Ask AI: show critical anomalies in Chicago…" onkeydown="if(event.key==='Enter') runNLSearch()"/>
+      <button onclick="runNLSearch()" id="nlSearchBtn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#2C3B4D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <button onclick="clearSearch()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
   </div>
 
+  <div id="aiSummaryBar" style="display:none;margin:8px 24px 0;background:#1B2632;color:#EEE9DF;border-radius:10px;padding:12px 16px;font-size:.82rem;line-height:1.6;position:relative;">
+    <span style="font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#FFB162;display:block;margin-bottom:4px;">AI Summary</span>
+    <span id="aiSummaryText"></span>
+    <span id="aiSummaryLoader" style="display:none;color:#FFB162">Thinking…</span>
+  </div>
+
   <div class="main">
     <div class="kpi-row">
-      <div class="card"><div class="kpi-label">Total Anomalies</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub" id="kTotalSub">Loading…</div></div>
+      <div class="card"><div class="kpi-label">Total Anomalies</div>
+      <div class="kpi-val" id="kTotal">—</div><div class="kpi-sub" id="kTotalSub">Loading…</div></div>
       <div class="card gauge-card">
         <div class="kpi-label" style="text-align:center;margin-bottom:8px">Max Anomaly Score</div>
         <div class="gauge-wrap">
