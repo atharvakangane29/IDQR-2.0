@@ -18,17 +18,15 @@
   const TIME_LABELS = [], BASELINE = [], REGIONAL_BASE = [];
 
   (function buildTimeSeries() {
-    const rng = seededRng(42);
-    // Use real data epoch if available (set during CSV upload)
+    // Initial arrays (will be repopulated with real aggregated data in initWithData)
     const origin = window._dataEpoch || startDate;
     for (let i = 0; i < WEEKS; i++) {
       const d = new Date(origin);
       d.setDate(d.getDate() + i * 7);
       const mo = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
       TIME_LABELS.push(i % 4 === 0 ? mo : "");
-      BASELINE.push(+(22 + Math.sin(i / 10) * 3 + (rng() - .5) * 1.5).toFixed(1));
-      const reg = 75 + Math.sin(i / 3.5) * 38 + Math.cos(i / 7) * 12 + (rng() - .5) * 10;
-      REGIONAL_BASE.push(+Math.max(10, reg).toFixed(1));
+      BASELINE.push(0);
+      REGIONAL_BASE.push(0);
     }
   })();
 
@@ -73,17 +71,28 @@
       const maxIdx  = idxs.length ? Math.max(...idxs) : 77;
       const numWeeks = Math.max(maxIdx + 4, 20); // pad a few weeks beyond last record
 
-      const rng    = seededRng(42);
       const origin = window._dataEpoch;
+      
+      // Aggregate actual volume (sum_net_sales_units) per week
+      const volPerWeek = Array(numWeeks).fill(0);
+      ALL_DATA.forEach(r => {
+        if (!isNaN(r.weekIdx) && r.weekIdx >= 0 && r.weekIdx < numWeeks) {
+          volPerWeek[r.weekIdx] += (r.vol || 0); // r.vol represents sum_net_sales_units
+        }
+      });
+
+      // Calculate an average baseline
+      const totalVol = volPerWeek.reduce((a, b) => a + b, 0);
+      const activeWeeksCount = volPerWeek.filter(v => v > 0).length || 1;
+      const avgVol = totalVol / activeWeeksCount;
 
       for (let i = 0; i < numWeeks; i++) {
         const d = new Date(origin);
         d.setDate(d.getDate() + i * 7);
         const mo = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
         TIME_LABELS.push(i % 4 === 0 ? mo : "");
-        BASELINE.push(+(22 + Math.sin(i / 10) * 3 + (rng() - .5) * 1.5).toFixed(1));
-        const reg = 75 + Math.sin(i / 3.5) * 38 + Math.cos(i / 7) * 12 + (rng() - .5) * 10;
-        REGIONAL_BASE.push(+Math.max(10, reg).toFixed(1));
+        BASELINE.push(+avgVol.toFixed(1)); 
+        REGIONAL_BASE.push(+volPerWeek[i].toFixed(1));
       }
     }
 
@@ -149,7 +158,7 @@
     const n   = data.length;
     const max = n ? data.reduce((m, r) => Math.max(m, r.score), 0) : 0;
     const avg = n ? (data.reduce((s, r) => s + r.score, 0) / n) : 0;
-    const vol = data.reduce((s, r) => s + (r.vol !== undefined ? r.vol : ((r.id * 17 + 200) % 900) + 300), 0);
+    const vol = data.reduce((s, r) => s + (r.vol || 0), 0);
     const prefix = totalCount !== null ? `${n} / ${totalCount}` : "" + n;
     document.getElementById("kTotal").textContent    = prefix;
     document.getElementById("kTotalSub").textContent = n >= 12 ? "↑ Above baseline" : "↓ Below baseline";
@@ -224,17 +233,18 @@
   ═══════════════════════════════════════════ */
   function buildScatter(data) {
     const normal = [], warn = [], crit = [];
-    const rngS = seededRng(99);
-    for (let i = 0; i < 90; i++) {
-      const x = rngS() * 240 + 20, y = rngS() * 3 + 2 + x * .004;
-      normal.push({ x, y, r: rngS() * 3 + 4, _id: null });
-    }
+    
+    // Use actual records from the dataset
     data.forEach(r => {
-      const x = 80 + (r.id % 750), y = r.score, rad = 5 + r.score * .38;
+      // X = Volume, Y = Score
+      const x = r.vol !== undefined ? r.vol : 0; 
+      const y = r.score !== undefined ? r.score : 0;
+      const rad = 5 + (y * 0.38);
       const pt = { x, y, r: rad, _id: r.id };
-      if (r.score >= 18)      crit.push(pt);
-      else if (r.score >= 10) warn.push(pt);
-      else                    normal.push(pt);
+      
+      if (y >= 18)      crit.push(pt);
+      else if (y >= 10) warn.push(pt);
+      else              normal.push(pt);
     });
 
     const canvas = document.getElementById("scatterChart");

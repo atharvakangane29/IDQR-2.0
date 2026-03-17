@@ -35,9 +35,9 @@ const DataKPIs = (() => {
     set('kpiTotalAccounts',    uniqueAccounts);
     set('kpiTotalAccountsSub', 'Unique account IDs in dataset');
 
-    // Total Net Sales Units — use real vol field if available, else derive
+    // Total Net Sales Units — use real vol field
     const totalVol = data.reduce(function(s, r) {
-      return s + (r.vol !== undefined ? r.vol : ((r.id * 17 + 200) % 900) + 300);
+      return s + (r.vol || 0);
     }, 0);
     set('kpiTotalVol',    totalVol.toLocaleString());
     set('kpiTotalVolSub', 'Sum of net sales units');
