@@ -5,7 +5,7 @@
 
 const Pipeline = (() => {
   let currentScreen = 0;
-  const TOTAL_SCREENS = 6; // 0-indexed: landing, upload, kpis, hyperparams, training, dashboard
+  const TOTAL_SCREENS = 7; // 0: landing, 1: loadtype, 2: upload, 3: kpis, 4: hyperparams, 5: training, 6: dashboard
   let stack = null;
 
   const STEP_LABELS = ['Upload', 'Review Data', 'Configure', 'Train', 'Dashboard'];
@@ -22,47 +22,32 @@ const Pipeline = (() => {
     updateStepIndicators();
     // Fire screen-specific init hooks if defined
     const hooks = {
-      2: () => DataKPIs && DataKPIs.init(),
-      4: () => Training && Training.init(),
-      5: () => {
-        if (typeof initWithData !== 'function') return;
-
-        if (window._uploadedRecords && window._uploadedRecords.length > 0) {
-          // Use uploaded CSV data — only fetch mock for typeBadgeMap/regionCities schema
+      1: () => LoadType && LoadType.init(),
+      3: () => DataKPIs && DataKPIs.init(),
+      5: () => Training && Training.init(),
+      6: () => {
+        // Show FABs
+        const rf = document.getElementById('reportFab');
+        const hf = document.getElementById('historyFab');
+        if (rf) rf.style.display = 'flex';
+        if (hf) hf.style.display = 'flex';
+        // hand off to existing app.js
+        if (typeof initWithData === 'function') {
           fetch('data1/mockData.json')
             .then(r => r.json())
-            .then(function(json) {
-              // Build typeBadgeMap dynamically from uploaded data
-              const badgeMap = {};
-              window._uploadedRecords.forEach(function(r) {
-                if (r.type && !badgeMap[r.type]) {
-                  const t = r.type.toLowerCase();
-                  if      (t.includes('region') || t.includes('territory')) badgeMap[r.type] = 'badge-reg';
-                  else if (t.includes('date'))                               badgeMap[r.type] = 'badge-disc';
-                  else if (t.includes('attribute'))                          badgeMap[r.type] = 'badge-vol';
-                  else if (t.includes('account'))                            badgeMap[r.type] = 'badge-attr';
-                  else                                                       badgeMap[r.type] = 'badge-fore';
-                }
-              });
-
-              json.records        = window._uploadedRecords;
-              json.typeBadgeMap   = badgeMap;
-              // Build accountTypeIds from uploaded data
-              const acctIds = {};
-              window._uploadedRecords.forEach(function(r) {
-                if (r.accounttype) {
-                  if (!acctIds[r.accounttype]) acctIds[r.accounttype] = [];
-                  acctIds[r.accounttype].push(r.id);
-                }
-              });
-              json.accountTypeIds = acctIds;
-              console.log('[IDQR] Initializing dashboard with', json.records.length, 'uploaded records');
+            .then(json => {
               initWithData(json);
+              // save this as a full or incremental load
+              if (typeof LoadType !== 'undefined' && typeof SessionStore !== 'undefined') {
+                const lt = LoadType.getType();
+                if (lt === 'incremental') {
+                  SessionStore.saveIncremental(json.records, 'Incremental — mockData');
+                } else {
+                  SessionStore.saveFullLoad(json.records, 'Full Load — mockData');
+                }
+                HistoryPanel && HistoryPanel.refresh();
+              }
             });
-        } else {
-          fetch('data1/mockData.json')
-            .then(r => r.json())
-            .then(json => initWithData(json));
         }
       }
     };
@@ -76,11 +61,11 @@ const Pipeline = (() => {
   }
 
   function updateStepIndicators() {
-    // screen 0 = landing (no step bar)
-    // screens 1-5 map to steps 0-4
+    // screen 0 = landing, screen 1 = loadtype (no step bar on these two)
+    // screens 2-6 map to steps 0-4
     document.querySelectorAll('.pipe-step').forEach((el, i) => {
       el.classList.remove('active', 'done');
-      const stepScreen = i + 1; // step 0 = screen 1, etc.
+      const stepScreen = i + 2; // step 0 = screen 2, etc.
       if (stepScreen < currentScreen)  el.classList.add('done');
       if (stepScreen === currentScreen) el.classList.add('active');
     });

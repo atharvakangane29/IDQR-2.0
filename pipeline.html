@@ -9,6 +9,215 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <link rel="stylesheet" href="assets1/css/styles.css"/>
   <link rel="stylesheet" href="assets1/css/pipeline.css"/>
+  <style>
+    /* ── Load Type Selection ── */
+    .load-type-screen { background: var(--truffle); }
+    .load-type-content {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 640px;
+      padding: 0 24px;
+      display: flex; flex-direction: column; gap: 28px;
+      align-items: center; margin: auto 0;
+    }
+    .load-type-header { text-align: center; }
+    .load-type-title  { font-family: 'Inter', sans-serif; font-size: 2rem; color: #fff; margin-bottom: 8px; }
+    .load-type-sub    { font-size: .875rem; color: rgba(255,255,255,.4); }
+    .load-type-cards  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; }
+    .load-card {
+      background: rgba(255,255,255,.04);
+      border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: 14px; padding: 24px 20px;
+      cursor: pointer; transition: border-color .2s, background .2s, transform .15s;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .load-card:hover      { border-color: rgba(255,177,98,.5); background: rgba(255,177,98,.05); transform: translateY(-2px); }
+    .load-card.selected   { border-color: var(--amber); background: rgba(255,177,98,.1); }
+    .load-card-icon       { width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,.07); display: flex; align-items: center; justify-content: center; }
+    .load-card-title      { font-size: .95rem; font-weight: 700; color: #fff; }
+    .load-card-desc       { font-size: .75rem; color: rgba(255,255,255,.45); line-height: 1.5; }
+    .load-card-badge      { display: inline-flex; align-items: center; gap: 5px; font-size: .65rem; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; width: fit-content; }
+    .badge-full           { background: rgba(127,163,192,.15); color: var(--blue-lt); }
+    .badge-incr           { background: rgba(107,191,142,.15); color: #6BBF8E; }
+
+    /* ── Last session banner (shown on incremental path) ── */
+    .session-diff-banner {
+      width: 100%; background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: 16px 18px;
+      display: none; flex-direction: column; gap: 10px;
+    }
+    .session-diff-banner.show  { display: flex; }
+    .sdb-title { font-size: .7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.35); }
+    .sdb-row   { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .sdb-stat  { text-align: center; }
+    .sdb-val   { font-family: 'Inter', sans-serif; font-size: 1.4rem; color: var(--amber); }
+    .sdb-lbl   { font-size: .65rem; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .6px; margin-top: 1px; }
+    .sdb-delta { display: flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+    .sdb-delta.up   { background: rgba(163,81,57,.15); color: #e87e62; }
+    .sdb-delta.down { background: rgba(107,191,142,.15); color: #6BBF8E; }
+    .sdb-delta.same { background: rgba(255,255,255,.07); color: rgba(255,255,255,.4); }
+    .sdb-ts    { font-size: .7rem; color: rgba(255,255,255,.25); }
+
+    /* ── AI Report Panel ── */
+    .report-fab {
+      position: fixed; bottom: 28px; right: 28px;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--truffle); color: #fff;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 28px; padding: 11px 18px 11px 14px;
+      font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 600;
+      cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,.35);
+      transition: transform .15s, box-shadow .15s; z-index: 900;
+    }
+    .report-fab:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+    .report-fab-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+    .report-drawer {
+      position: fixed; right: 0; top: 0; bottom: 0;
+      width: 480px; max-width: 95vw;
+      background: var(--truffle);
+      border-left: 1px solid rgba(255,255,255,.1);
+      box-shadow: -8px 0 40px rgba(0,0,0,.4);
+      z-index: 950; display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .4s cubic-bezier(.76,0,.24,1);
+    }
+    .report-drawer.open { transform: translateX(0); }
+    .report-drawer-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .report-drawer-title { font-family: 'Inter', sans-serif; font-size: 1rem; color: #fff; }
+    .report-drawer-sub   { font-size: .72rem; color: rgba(255,255,255,.3); margin-top: 2px; }
+    .report-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,.07); border: none; cursor: pointer;
+      color: rgba(255,255,255,.6); display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: background .15s;
+    }
+    .report-close:hover { background: rgba(255,255,255,.14); }
+    .report-toolbar {
+      padding: 12px 22px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .report-type-btn {
+      padding: 5px 12px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: transparent; color: rgba(255,255,255,.55);
+      font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+    }
+    .report-type-btn:hover   { border-color: rgba(255,177,98,.5); color: rgba(255,255,255,.85); }
+    .report-type-btn.active  { background: rgba(255,177,98,.15); border-color: var(--amber); color: var(--amber); }
+    .report-body  { flex: 1; overflow-y: auto; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+    .report-generating {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; padding: 40px 0; color: rgba(255,255,255,.4);
+    }
+    .report-spinner {
+      width: 32px; height: 32px;
+      border: 2.5px solid rgba(255,177,98,.2);
+      border-top-color: var(--amber);
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    .report-generating-label { font-size: .82rem; }
+    .report-content { display: none; flex-direction: column; gap: 14px; }
+    .report-content.show { display: flex; }
+    .report-section {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .report-section-title {
+      font-size: .68rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+    }
+    .report-text { font-size: .82rem; color: rgba(255,255,255,.7); line-height: 1.65; }
+    .report-text p { margin-bottom: 8px; }
+    .report-text p:last-child { margin-bottom: 0; }
+    .report-finding {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: .8rem; color: rgba(255,255,255,.65);
+    }
+    .report-finding:last-child { border-bottom: none; }
+    .report-finding-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .report-footer {
+      padding: 14px 22px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex; gap: 8px; flex-shrink: 0;
+    }
+    .report-copy-btn {
+      flex: 1; padding: 9px; border-radius: 7px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.7); font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; cursor: pointer; transition: background .15s;
+    }
+    .report-copy-btn:hover { background: rgba(255,255,255,.12); }
+    .report-regen-btn {
+      padding: 9px 16px; border-radius: 7px;
+      background: var(--amber); border: none;
+      color: var(--truffle); font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; font-weight: 700; cursor: pointer; transition: background .15s;
+    }
+    .report-regen-btn:hover { background: #ffc07a; }
+
+    /* ── Load History Panel ── */
+    .history-fab {
+      position: fixed; bottom: 28px; left: 28px;
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(44,59,77,.9); color: rgba(255,255,255,.7);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 28px; padding: 9px 14px;
+      font-family: 'DM Sans', sans-serif; font-size: .78rem;
+      cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      transition: transform .15s; z-index: 900;
+    }
+    .history-fab:hover { transform: translateY(-2px); color: #fff; }
+    .history-panel {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 340px;
+      background: var(--truffle); border-right: 1px solid rgba(255,255,255,.1);
+      box-shadow: 8px 0 40px rgba(0,0,0,.4);
+      z-index: 950; display: flex; flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform .4s cubic-bezier(.76,0,.24,1);
+    }
+    .history-panel.open { transform: translateX(0); }
+    .history-panel-header {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .history-panel-title { font-family: 'Inter', sans-serif; font-size: .95rem; color: #fff; }
+    .history-panel-body  { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .history-item {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 9px; padding: 12px 14px;
+    }
+    .history-item-top    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .history-item-label  { font-size: .8rem; font-weight: 600; color: #fff; }
+    .history-item-ts     { font-size: .65rem; color: rgba(255,255,255,.3); }
+    .history-item-stats  { display: flex; gap: 14px; flex-wrap: wrap; }
+    .history-stat        { font-size: .72rem; color: rgba(255,255,255,.45); }
+    .history-stat span   { color: rgba(255,255,255,.8); font-weight: 600; }
+    .history-badge-full  { display: inline-block; font-size: .6rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: rgba(127,163,192,.15); color: var(--blue-lt); margin-bottom: 4px; }
+    .history-badge-incr  { display: inline-block; font-size: .6rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: rgba(107,191,142,.15); color: #6BBF8E; margin-bottom: 4px; }
+    .history-empty { text-align: center; padding: 40px 0; font-size: .8rem; color: rgba(255,255,255,.25); }
+    .history-panel-footer {
+      padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.08);
+      display: flex; gap: 8px; flex-shrink: 0;
+    }
+    .history-clear-btn {
+      width: 100%; padding: 8px; border-radius: 6px;
+      background: rgba(163,81,57,.15); border: 1px solid rgba(163,81,57,.3);
+      color: #e87e62; font-family: 'DM Sans', sans-serif; font-size: .78rem;
+      cursor: pointer; transition: background .15s;
+    }
+    .history-clear-btn:hover { background: rgba(163,81,57,.25); }
+  </style>
 </head>
 <body>
 
@@ -93,10 +302,75 @@
   </div>
 </section>
 
+<!-- ╔══════════════════════════════════════════╗
+     ║  SCREEN 1.5 — LOAD TYPE SELECTION       ║
+     ╚══════════════════════════════════════════╝ -->
+<section class="pipeline-screen load-type-screen" id="screen-loadtype">
+  <div class="landing-bg-grid"></div>
+  <div class="load-type-content">
+    <div class="load-type-header">
+      <div class="load-type-title">How are you loading data?</div>
+      <div class="load-type-sub" id="loadTypeSub">Choose full replacement or append to your existing session.</div>
+    </div>
+
+    <div class="load-type-cards">
+      <div class="load-card selected" id="card-full" onclick="LoadType.select('full')">
+        <div class="load-card-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="2" width="16" height="16" rx="2.5" stroke="#7FA3C0" stroke-width="1.5"/>
+            <path d="M10 6v8M6 10h8" stroke="#7FA3C0" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="load-card-badge badge-full">Full Load</div>
+        <div class="load-card-title">Replace all data</div>
+        <div class="load-card-desc">Start fresh. Replaces any previously loaded session. Use when you have a complete new dataset.</div>
+      </div>
+      <div class="load-card" id="card-incr" onclick="LoadType.select('incremental')">
+        <div class="load-card-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M4 14l4-5 3 3 5-6" stroke="#6BBF8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="16" cy="5" r="3" fill="rgba(107,191,142,.2)" stroke="#6BBF8E" stroke-width="1.3"/>
+            <path d="M15 5h2M16 4v2" stroke="#6BBF8E" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="load-card-badge badge-incr">Incremental</div>
+        <div class="load-card-title">Append new records</div>
+        <div class="load-card-desc">Merge new data into your existing session. Deduplicates by account ID automatically.</div>
+      </div>
+    </div>
+
+    <!-- Last session diff — shown when incremental is selected and history exists -->
+    <div class="session-diff-banner" id="sessionDiffBanner">
+      <div class="sdb-title">Last session snapshot</div>
+      <div class="sdb-row">
+        <div class="sdb-stat"><div class="sdb-val" id="sdbCount">—</div><div class="sdb-lbl">Records</div></div>
+        <div class="sdb-stat"><div class="sdb-val" id="sdbAvg">—</div><div class="sdb-lbl">Avg Score</div></div>
+        <div class="sdb-stat"><div class="sdb-val" id="sdbMax">—</div><div class="sdb-lbl">Max Score</div></div>
+        <div class="sdb-stat"><div class="sdb-val" id="sdbCrit">—</div><div class="sdb-lbl">Critical</div></div>
+      </div>
+      <div class="sdb-row" style="justify-content:space-between">
+        <div class="sdb-ts" id="sdbTs">—</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="sdbDeltas"></div>
+      </div>
+    </div>
+
+    <div class="pipe-cta-row" style="width:100%">
+      <span class="pipe-skip-link" onclick="Pipeline.advanceTo(0)" style="color:rgba(255,255,255,.3)">Back</span>
+      <button class="btn-primary" onclick="LoadType.confirm()">
+        Continue
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
 
 <!-- ╔══════════════════════════════════════════╗
      ║  SCREEN 2 — DATA UPLOAD                 ║
      ╚══════════════════════════════════════════╝ -->
+
 <section class="pipeline-screen screen-upload" id="screen-upload">
   <!-- Top bar -->
   <div class="pipe-topbar">
@@ -167,13 +441,13 @@
     </div>
 
     <div class="pipe-cta-row">
-      <span class="pipe-skip-link" onclick="DataUpload.useSampleData(); Pipeline.advanceTo(2);">
+      <span class="pipe-skip-link" onclick="DataUpload.useSampleData(); Pipeline.advanceTo();">
         Use sample data instead
       </span>
       <button class="btn-primary" id="uploadContinueBtn"
         style="opacity:.4;cursor:not-allowed"
         disabled
-        onclick="Pipeline.advanceTo(2)">
+        onclick="Pipeline.advanceTo()">
         Confirm &amp; Continue
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -316,8 +590,8 @@
     </div>
 
     <div class="pipe-cta-row">
-      <span class="pipe-skip-link" onclick="Pipeline.advanceTo(1)">Back</span>
-      <button class="btn-primary" onclick="Pipeline.advanceTo(3)">
+      <span class="pipe-skip-link" onclick="Pipeline.advanceTo(2)">Back</span>
+      <button class="btn-primary" onclick="Pipeline.advanceTo(4)">
         Configure Detection
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -460,8 +734,8 @@
     </div><!-- /.param-grid -->
 
     <div class="pipe-cta-row">
-      <span class="pipe-skip-link" onclick="Pipeline.advanceTo(2)">Back</span>
-      <button class="btn-primary" onclick="Pipeline.advanceTo(4)">
+      <span class="pipe-skip-link" onclick="Pipeline.advanceTo(3)">Back</span>
+      <button class="btn-primary" onclick="Pipeline.advanceTo(5)">
         Start Training
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M2.5 6.5h8M7 3l3.5 3.5L7 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -754,20 +1028,81 @@
 
 
 </div><!-- /#pipelineStack -->
+
+<!-- ── AI Report FAB ── -->
+<button class="report-fab" id="reportFab" onclick="ReportPanel.open()" style="display:none">
+  <div class="report-fab-dot"></div>
+  AI Report
+</button>
+
+<!-- ── AI Report Drawer ── -->
+<div class="report-drawer" id="reportDrawer">
+  <div class="report-drawer-header">
+    <div>
+      <div class="report-drawer-title">AI Anomaly Report</div>
+      <div class="report-drawer-sub" id="reportDrawerSub">Powered by Claude</div>
+    </div>
+    <button class="report-close" onclick="ReportPanel.close()">✕</button>
+  </div>
+  <div class="report-toolbar">
+    <button class="report-type-btn active" data-rtype="summary"    onclick="ReportPanel.setType('summary')">Summary</button>
+    <button class="report-type-btn"        data-rtype="critical"   onclick="ReportPanel.setType('critical')">Critical Only</button>
+    <button class="report-type-btn"        data-rtype="regional"   onclick="ReportPanel.setType('regional')">By Region</button>
+    <button class="report-type-btn"        data-rtype="delta"      onclick="ReportPanel.setType('delta')">Session Delta</button>
+  </div>
+  <div class="report-body" id="reportBody">
+    <div class="report-generating" id="reportGenerating" style="display:none">
+      <div class="report-spinner"></div>
+      <div class="report-generating-label">Generating report…</div>
+    </div>
+    <div class="report-content" id="reportContent"></div>
+    <div style="text-align:center;padding:40px 0;font-size:.82rem;color:rgba(255,255,255,.25)" id="reportEmpty">
+      Select a report type above and click Generate.
+    </div>
+  </div>
+  <div class="report-footer">
+    <button class="report-copy-btn" onclick="ReportPanel.copy()">Copy to clipboard</button>
+    <button class="report-regen-btn" onclick="ReportPanel.generate()">Generate ↗</button>
+  </div>
+</div>
+
+<!-- ── Load History FAB ── -->
+<button class="history-fab" id="historyFab" onclick="HistoryPanel.toggle()" style="display:none">
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+    <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.3"/>
+    <path d="M6.5 4v3l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>
+  Load History
+</button>
+
+<!-- ── History Panel ── -->
+<div class="history-panel" id="historyPanel">
+  <div class="history-panel-header">
+    <div class="history-panel-title">Load History</div>
+    <button class="report-close" onclick="HistoryPanel.close()">✕</button>
+  </div>
+  <div class="history-panel-body" id="historyPanelBody"></div>
+  <div class="history-panel-footer">
+    <button class="history-clear-btn" onclick="HistoryPanel.clearAll()">Clear all history + incremental data</button>
+  </div>
+</div>
 </div><!-- /#pipelineRoot -->
 
 
 <!-- ══════════════════════════════════════
      SCRIPTS — load order matters
 ══════════════════════════════════════ -->
+<script src="src1/sessionStore.js"></script>
 <script src="src1/pipeline.js"></script>
 <script src="src1/views/landing.js"></script>
+<script src="src1/views/loadType.js"></script>
 <script src="src1/views/dataUpload.js"></script>
 <script src="src1/views/dataKPIs.js"></script>
 <script src="src1/views/hyperparams.js"></script>
 <script src="src1/views/training.js"></script>
+<script src="src1/reportPanel.js"></script>
+<script src="src1/historyPanel.js"></script>
 <script src="src1/app.js"></script>
-<!-- dataLoader is NOT included here — app.js is booted by pipeline.js at screen 5 -->
 
 </body>
 </html>

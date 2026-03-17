@@ -112,7 +112,7 @@ const Training = (() => {
 
     // Brief pause then advance to dashboard
     await wait(800);
-    window.location.href = 'idqr2.html';
+    Pipeline.advanceTo(6);  
 
     // Show toast on dashboard load
     setTimeout(() => {
