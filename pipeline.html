@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link rel="stylesheet" href="assets1/css/styles.css"/>
   <link rel="stylesheet" href="assets1/css/pipeline.css"/>
 </head>
@@ -31,7 +32,7 @@
       <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
       Anomaly Detection Platform
     </div> -->
-		<img src="assets1/img/logo.png" width="68" height="68">
+		<img src="assets1/img/logo.png" width="150" height="150">
 		<br>
 		<br>
     <h1 class="landing-title">
@@ -300,7 +301,7 @@
     <div class="kpis-bottom-row">
 
       <div class="acct-type-chart-card">
-        <div class="card-title" style="margin-bottom:0">Top 5 Records by Account Type</div>
+        <div class="card-title" style="margin-bottom:0">Top 5 Account Type</div>
         <div class="acct-type-bars" id="acctTypeBars">
           <div style="color:#aaa;font-size:.8rem;padding:16px 0">Loading…</div>
         </div>
@@ -372,10 +373,13 @@
           </button>
         </div>
         <div class="param-card-desc">How aggressively should anomalies be flagged?</div>
-        <div class="pill-toggle">
+        <div class="pill-toggle" id="sensPillToggle">
           <button class="pill-opt" data-value="Low">Low</button>
           <button class="pill-opt selected" data-value="Medium">Medium</button>
           <button class="pill-opt" data-value="High">High</button>
+        </div>
+        <div class="sens-slider-wrap" id="sensSliderWrap" style="margin-top: 16px; --sens-color: #FFB162;">
+          <input type="range" id="sensSlider" min="0" max="100" value="50">
         </div>
       </div>
 
@@ -390,14 +394,17 @@
             </div>
           </button>
         </div>
-        <div class="param-card-desc">How much historical data should inform the baseline?</div>
-        <select class="param-select" id="lookbackSelect"
-          onchange="Hyperparams && (Hyperparams.getConfig().lookback = this.value)">
+        <div class="param-card-desc" id="lookbackDesc">How much historical data should inform the baseline?</div>
+        
+        <select class="param-select" id="lookbackSelect">
           <option>4 Weeks</option>
           <option>13 Weeks</option>
           <option selected>26 Weeks</option>
           <option>All Time</option>
         </select>
+        
+        <div id="lookbackDateRange" style="margin-top: 12px; font-size: 0.8rem; color: var(--blue-mid); font-weight: 600; background: rgba(74,107,138,0.08); padding: 8px 10px; border-radius: 6px; text-align: center;">
+          </div>
       </div>
 
       <!-- Weight by volume -->
@@ -550,15 +557,15 @@
     <!-- Stat callouts — appear mid-training -->
     <div class="training-stats">
       <div class="training-stat" id="stat0">
-        <div class="training-stat-val">20</div>
+        <div class="training-stat-val"></div>
         <div class="training-stat-label">Records ingested</div>
       </div>
       <div class="training-stat" id="stat1">
-        <div class="training-stat-val">6</div>
+        <div class="training-stat-val"></div>
         <div class="training-stat-label">High severity</div>
       </div>
       <div class="training-stat" id="stat2">
-        <div class="training-stat-val">4</div>
+        <div class="training-stat-val"></div>
         <div class="training-stat-label">Regions affected</div>
       </div>
     </div>
@@ -650,9 +657,14 @@
         </div>
         <span id="sevVal" style="white-space:nowrap;min-width:46px">0 – 30</span>
       </div>
+      
+      <button class="filter-btn" style="background:var(--amber); color:var(--truffle); border:none; font-weight:700; margin-left:8px;" onclick="openExportModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Export
+      </button>
+
     </div>
   </header>
-
   <div class="active-filters" id="activeFilters"></div>
   <div class="cf-banner" id="cfBanner">
     <span id="cfBannerText"></span>

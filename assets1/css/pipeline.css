@@ -99,14 +99,14 @@
 
 /* ─── SCREEN 1 — LANDING ─── */
 .screen-landing {
-  background: var(--truffle);
+  background: #4c3b25de;
 }
 .landing-bg-grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.1151) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.1151) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
 }
@@ -875,4 +875,36 @@
   border-radius: 2px;
   width: 0%;
   transition: width .6s ease;
+}
+
+/* ─── SENSITIVITY SLIDER & DYNAMIC PILL COLORS ─── */
+.pill-opt.selected.sens-low { background: var(--blue-lt); border-color: var(--blue-lt); color: var(--truffle); }
+.pill-opt.selected.sens-med { background: var(--amber); border-color: var(--amber); color: var(--truffle); }
+.pill-opt.selected.sens-high { background: var(--flame); border-color: var(--flame); color: #fff; }
+
+/* ─── DYNAMIC SENSITIVITY SLIDER ─── */
+.sens-slider-wrap input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  background: var(--sens-color, #FFB162); /* Falls back to Amber if unset */
+}
+
+.sens-slider-wrap input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  background: var(--sens-color, #FFB162);
+  transition: transform 0.1s;
+}
+
+.sens-slider-wrap input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.15); /* Nice little interaction pop when dragging */
 }

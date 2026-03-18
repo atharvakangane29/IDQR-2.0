@@ -128,7 +128,7 @@ const DataUpload = (() => {
         console.warn('[IDQR] sessionStorage save failed (data too large?):', err);
       }
 
-      if (rowCountEl) rowCountEl.textContent = window._uploadedRecords.length + ' anomaly records detected';
+      // if (rowCountEl) rowCountEl.textContent = window._uploadedRecords.length + ' anomaly records detected';
       if (successEl)  successEl.classList.add('show');
 
       renderMappingTable(parsed.meta.fields || []);
@@ -142,8 +142,13 @@ const DataUpload = (() => {
     const tbody  = document.getElementById('mappingBody');
     if (!tbody) return;
     const colSet = new Set((availableCols || []).map(c => c.toLowerCase().trim()));
-    tbody.innerHTML = DISPLAY_MAPPINGS.map(function(m) {
+    
+    let allMapped = true;
+    
+    let html = DISPLAY_MAPPINGS.map(function(m) {
       const found = colSet.has(m.csvCol.toLowerCase());
+      if (!found) allMapped = false; // Check if any mapping is missing
+      
       return '<div class="mapping-row">' +
         '<span class="mapping-col-user">'     + m.csvCol        + '</span>' +
         '<span class="mapping-col-arrow">→</span>' +
@@ -154,6 +159,16 @@ const DataUpload = (() => {
         '</span>' +
         '</div>';
     }).join('');
+
+    // If everything mapped successfully, append the message as an additional row
+    if (allMapped) {
+      html += '<div class="mapping-row">' +
+        '<span class="mapping-col-user" style="grid-column: span 3; color: #888; font-style: italic; font-weight: normal;">... all the other data is mapped as well ...</span>' +
+        '<span class="mapping-status ok"><span class="status-dot"></span>Mapped</span>' +
+        '</div>';
+    }
+
+    tbody.innerHTML = html;
   }
 
   function enableContinue() {
